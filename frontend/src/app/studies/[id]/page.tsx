@@ -134,7 +134,7 @@ export default function StudyViewerPage() {
                 }}
               />
               {/* Scan Technique Overlay - Detailed Medical Specs */}
-              <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-4 py-3 rounded-lg text-xs text-white border border-white/10 shadow-xl max-w-xs">
+              <div className="absolute top-20 left-4 bg-black/70 backdrop-blur-md px-4 py-3 rounded-lg text-xs text-white border border-white/10 shadow-xl max-w-xs transition-all hover:bg-black/80">
                 <div className="flex items-center gap-2 mb-2 border-b border-white/10 pb-2">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     <p className="font-mono font-bold text-blue-400 tracking-wide uppercase">
