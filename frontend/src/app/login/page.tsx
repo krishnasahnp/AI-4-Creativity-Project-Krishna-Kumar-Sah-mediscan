@@ -1,212 +1,131 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Stethoscope, Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { useAuthStore } from '@/store';
+import { motion } from 'framer-motion';
+import { Shield, Lock, Mail, ArrowRight, Activity, Cpu } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
+  const [email, setEmail] = useState('admin@medivision.com');
+  const [password, setPassword] = useState('admin123');
+  const { login } = useAuth();
   const router = useRouter();
-  const { login } = useAuthStore();
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    setLoading(true);
+    
+    // Simulate network delay for effect
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    try {
-      // Mock login - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser = {
-        id: '1',
-        email,
-        full_name: 'Dr. Rajesh Kumar',
-        role: 'clinician'
-      };
-      
-      login(mockUser, 'mock-access-token', 'mock-refresh-token');
+    const success = await login(email, password);
+    
+    if (success) {
+      toast.success('Welcome back, Dr. Kumar');
       router.push('/');
-    } catch (err) {
-      setError('Invalid email or password');
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast.error('Invalid credentials');
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] flex">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 p-12 flex-col justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-              <Stethoscope className="w-7 h-7 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-white">MediVision AI</span>
-          </div>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h1 className="text-4xl font-bold text-white mb-4">
-              AI-Powered Medical Imaging Analysis
-            </h1>
-            <p className="text-xl text-white/80">
-              Intelligent CT and Ultrasound analysis with explainable AI, 
-              automated reporting, and voice-enabled workflow.
-            </p>
-          </motion.div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center gap-3 text-white/80">
-            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-              ✓
-            </div>
-            <span>AI-assisted findings detection</span>
-          </div>
-          <div className="flex items-center gap-3 text-white/80">
-            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-              ✓
-            </div>
-            <span>Automated report generation</span>
-          </div>
-          <div className="flex items-center gap-3 text-white/80">
-            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-              ✓
-            </div>
-            <span>Voice dictation support</span>
-          </div>
-        </motion.div>
+    <div className="min-h-screen bg-[#0c1222] flex items-center justify-center relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 z-0">
+         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[120px]" />
+         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]" />
       </div>
 
-      {/* Right Panel - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="w-full max-w-md z-10 px-4">
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="w-full max-w-md"
+           initial={{ opacity: 0, y: 30 }}
+           animate={{ opacity: 1, y: 0 }}
+           transition={{ duration: 0.6 }}
+           className="bg-[#1e293b]/70 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8 shadow-2xl relative overflow-hidden"
         >
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-              <Stethoscope className="w-7 h-7 text-white" />
+          {/* Animated decorative line */}
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-teal-500 to-transparent opacity-50" />
+
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-br from-teal-500 to-blue-500 rounded-2xl flex items-center justify-center mb-4 shadow-lg shadow-teal-500/20">
+               <Activity className="w-8 h-8 text-white" />
             </div>
-            <span className="text-2xl font-bold gradient-text">MediVision AI</span>
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">MediVision AI</h1>
+            <p className="text-slate-400">Secure Medical Imaging Portal</p>
           </div>
 
-          <div className="card">
-            <h2 className="text-2xl font-bold mb-2">Welcome back</h2>
-            <p className="text-[var(--color-text-secondary)] mb-6">
-              Sign in to continue to your dashboard
-            </p>
-
-            {error && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                {error}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input 
+                  type="email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#0f172a] border border-slate-700 focus:border-teal-500 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-all"
+                  placeholder="doctor@hospital.com"
+                />
               </div>
-            )}
+            </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm text-[var(--color-text-secondary)] mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
-                  <input
-                    type="email"
-                    className="input pl-11 w-full"
-                    placeholder="doctor@hospital.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5 ml-1">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-[#0f172a] border border-slate-700 focus:border-teal-500 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-teal-500 transition-all"
+                  placeholder="••••••••"
+                />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm text-[var(--color-text-secondary)] mb-2">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="input pl-11 pr-11 w-full"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-white"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-                  <input type="checkbox" className="rounded" />
+            <div className="flex items-center justify-between text-sm">
+               <label className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300">
+                  <input type="checkbox" className="w-4 h-4 rounded border-slate-700 bg-[#0f172a] text-teal-500 focus:ring-offset-0 focus:ring-teal-500" />
                   Remember me
-                </label>
-                <a href="#" className="text-sm text-[var(--color-accent-primary)] hover:underline">
-                  Forgot password?
-                </a>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="btn btn-primary w-full py-3"
-              >
-                {isLoading ? (
-                  <span className="animate-pulse">Signing in...</span>
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="mt-6 pt-6 border-t border-[var(--color-border)] text-center">
-              <p className="text-sm text-[var(--color-text-secondary)]">
-                Don't have an account?{' '}
-                <a href="/register" className="text-[var(--color-accent-primary)] hover:underline">
-                  Request access
-                </a>
-              </p>
+               </label>
+               <a href="#" className="text-teal-400 hover:text-teal-300 font-medium">Forgot Password?</a>
             </div>
-          </div>
 
-          {/* Demo credentials */}
-          <div className="mt-4 p-4 bg-[var(--color-bg-secondary)] rounded-lg text-center">
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Demo: Any email & password will work
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-400 hover:to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-teal-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Authenticating...
+                </>
+              ) : (
+                <>
+                  <Shield className="w-5 h-5" />
+                  Access Portal
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-slate-700/50 text-center">
+            <p className="text-slate-500 text-xs flex items-center justify-center gap-2">
+              <Cpu className="w-3 h-3" />
+              Powered by MediCortex Neural Engine v2.4
             </p>
           </div>
         </motion.div>
+        
+        <div className="mt-6 text-center text-slate-500 text-sm">
+           <p>Default Access: <span className="text-teal-400 font-mono bg-teal-500/10 px-1 rounded">admin@medivision.com</span> / <span className="text-teal-400 font-mono bg-teal-500/10 px-1 rounded">admin123</span></p>
+        </div>
       </div>
     </div>
   );

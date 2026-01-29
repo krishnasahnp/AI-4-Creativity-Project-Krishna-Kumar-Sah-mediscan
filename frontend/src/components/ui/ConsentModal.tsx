@@ -12,10 +12,10 @@ interface ConsentModalProps {
 
 export default function ConsentModal({ isOpen, onAccept, onDecline }: ConsentModalProps) {
   const [checkedItems, setCheckedItems] = useState({
-    dataUsage: false,
-    aiLimitations: false,
-    professionalReview: false,
-    dataRetention: false,
+    dataUsage: true,
+    aiLimitations: true,
+    professionalReview: true,
+    dataRetention: true,
   });
 
   const allChecked = Object.values(checkedItems).every(Boolean);
