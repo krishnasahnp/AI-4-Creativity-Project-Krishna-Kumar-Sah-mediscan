@@ -46,7 +46,7 @@ function ReportSection({ title, icon: Icon, color, children, defaultOpen = true 
   );
 }
 
-export default function AnalysisReport({ report }: { report: AIAnalysisReport }) {
+export default function AnalysisReport({ report, imageUrl }: { report: AIAnalysisReport; imageUrl?: string }) {
   const [viewMode, setViewMode] = useState<'clinician' | 'patient'>('clinician');
 
   return (
@@ -77,6 +77,23 @@ export default function AnalysisReport({ report }: { report: AIAnalysisReport })
               <h4 className="text-xs uppercase text-slate-400 font-bold mb-2 flex items-center gap-2">
                  <FileText className="w-3 h-3" /> Scan Overview
               </h4>
+              
+              {/* Thumbnail Image */}
+              {imageUrl && (
+                <div className="mb-3 rounded-lg overflow-hidden border border-slate-700 relative h-32 bg-black">
+                    <img 
+                        src={imageUrl} 
+                        alt="Scan Thumbnail" 
+                        className="w-full h-full object-cover opacity-80"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end p-2">
+                        <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">
+                            Source Image
+                        </span>
+                    </div>
+                </div>
+              )}
+
               <p className="font-medium text-sm text-white">{report.overview.description}</p>
               <div className="mt-2 flex gap-2">
                  <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs">{report.overview.modality}</span>

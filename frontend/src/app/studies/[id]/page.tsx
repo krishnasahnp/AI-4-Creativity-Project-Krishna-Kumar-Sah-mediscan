@@ -179,7 +179,13 @@ export default function StudyViewerPage() {
               </div>
 
               <div className="flex-1 overflow-auto rounded-xl border border-slate-800 bg-[#0f172a]">
-                {activeTab === 'analysis' && <AnalysisReport report={report} />}
+                {activeTab === 'analysis' && (
+                    <AnalysisReport 
+                        report={report} 
+                        imageUrl="/placeholder-ct.png"
+                    />
+                )}
+                {/* Note: In a real app, imageUrl would be dynamic based on currentScan.url */}
                 {activeTab === 'chat' && <ChatPanel />}
               </div>
             </div>
