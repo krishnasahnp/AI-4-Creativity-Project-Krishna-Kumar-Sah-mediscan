@@ -44,6 +44,10 @@ export default function StudyViewerPage() {
   // Data State
   const [report, setReport] = useState(generateAIAnalysis('CT', 'Chest'));
 
+  // Default SVG for CT (Matches Viewer Style)
+  const CT_PLACEHOLDER = `data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUxZTFlIi8+CiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSIyMDAiIGZpbGw9IiMzNzQxNTEiLz4KICA8ZWxsaXBzZSBjeD0iMjU2IiBjeT0iMTkyIiByeD0iNjQiIHJ5PSI0MCIgZmlxsPSIjNjQ3NDhiIiBvcGFjaXR5PSIwLjUiLz4KICA8ZWxsaXBzZSBjeD0iMTkyIiBjeT0iMjU2IiByeD0iNDAiIHJ5PSI2NCIgZmlxsPSIjNjQ3NDhiIiBvcGFjaXR5PSIwLjMiIHRyYW5zZm9ybT0icm90YXRlKDE1IDE5MiAyNTYpIi8+CiAgPGVsbGlwc2UgY3g9IjMyMCIgY3k9IjI1NiIgcng9IjQwIiByeT0iNjQiIGZpbGw9IiM2NDc0OGIiIG9wYWNpdHk9IjAuMyIgdHJhbnNmb3JtPSJyb3RhdGUoLTE1IDMyMCAyNTYpIi8+CiAgPGNpcmNsZSBjeD0iMzQ1IiBjeT0iMjQwIiByPSI4IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC44Ii8+Cjwvc3ZnPg==`;
+
+
   const currentCase = cases.find(c => c.id === id);
   const currentScan = currentCase?.scans?.find(s => s.id === selectedScanId) || currentCase?.scans?.[0];
 
@@ -182,7 +186,7 @@ export default function StudyViewerPage() {
                 {activeTab === 'analysis' && (
                     <AnalysisReport 
                         report={report} 
-                        imageUrl="/placeholder-ct.svg"
+                        imageUrl={CT_PLACEHOLDER}
                     />
                 )}
                 {/* Note: In a real app, imageUrl would be dynamic based on currentScan.url */}
