@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Backend API metrics
+  - job_name: "backend"
+    static_configs:
+      - targets: ["backend:8000"]
+    metrics_path: /metrics
+
+  # Redis metrics
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis:6379"]
+
+  # PostgreSQL metrics (via postgres_exporter)
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  # Node metrics
+  - job_name: "node"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # NVIDIA GPU metrics
+  - job_name: "nvidia-gpu"
+    static_configs:
+      - targets: ["nvidia-dcgm-exporter:9400"]
