@@ -1,143 +1,84 @@
 """
-MediVision AI - Main Application Entry Point
-
-This is the main FastAPI application that serves as the entry point for the
-MediVision AI medical imaging analysis platform. It orchestrates all API routes,
-middleware, and application lifecycle events.
-
-Author: MediVision AI Team
-Version: 1.0.0
+MediScan AI - ML Image Processing Backend
+FastAPI application for medical image analysis
 """
-
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import ORJSONResponse
-from loguru import logger
+from contextlib import asynccontextmanager
+import logging
 
-from app.api import router as api_router
-from app.core.config import settings
-from app.core.logging import setup_logging
-from app.db.session import engine
-from app.db.base import Base
+from app.api.routes import upload, analyze, report
+from app.services.inference_engine import InferenceEngine
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Global inference engine instance
+inference_engine: InferenceEngine = None
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """
-    Application lifecycle manager.
+async def lifespan(app: FastAPI):
+    """Startup and shutdown events"""
+    global inference_engine
     
-    Handles startup and shutdown events for the application,
-    including database initialization and cleanup tasks.
-    """
-    # Startup
-    logger.info("🚀 Starting MediVision AI Backend...")
+    # Startup: Load ML models
+    logger.info("🚀 Starting MediScan AI Backend...")
+    logger.info("📦 Loading ML models...")
     
-    # Setup logging
-    setup_logging()
+    inference_engine = InferenceEngine()
+    await inference_engine.load_models()
     
-    # Initialize database tables (in production, use Alembic migrations)
-    logger.info("📦 Initializing database...")
-    async with engine.begin() as conn:
-        # Only create tables if they don't exist
-        await conn.run_sync(Base.metadata.create_all)
-    
-    logger.info("✅ MediVision AI Backend started successfully!")
-    logger.info(f"📍 API Documentation: http://localhost:{settings.PORT}/docs")
+    logger.info("✅ Models loaded successfully!")
     
     yield
     
-    # Shutdown
-    logger.info("🛑 Shutting down MediVision AI Backend...")
-    await engine.dispose()
-    logger.info("👋 Goodbye!")
+    # Shutdown: Cleanup
+    logger.info("👋 Shutting down MediScan AI Backend...")
 
 
-def create_application() -> FastAPI:
-    """
-    Factory function to create and configure the FastAPI application.
-    
-    This pattern allows for easy testing and configuration management.
-    
-    Returns:
-        FastAPI: Configured FastAPI application instance
-    """
-    app = FastAPI(
-        title=settings.PROJECT_NAME,
-        description="""
-        MediVision AI - Intelligent Medical Imaging Analysis Platform
-        
-        An AI-powered platform for CT scan and Ultrasound analysis with:
-        - Clinical findings (classification, segmentation, measurements)
-        - Structured report generation
-        - Explainability overlays
-        - Multimodal chat (image + text + voice)
-        - Speech-to-text for clinician dictation
-        
-        ⚠️ DISCLAIMER: This is a research/educational platform. 
-        Not intended for clinical diagnosis without proper regulatory approval.
-        """,
-        version="1.0.0",
-        openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
-        docs_url="/docs",
-        redoc_url="/redoc",
-        default_response_class=ORJSONResponse,
-        lifespan=lifespan,
-    )
-    
-    # Configure CORS
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    
-    # Add Gzip compression for responses
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
-    
-    # Include API routes
-    app.include_router(api_router, prefix=settings.API_V1_PREFIX)
-    
-    # Health check endpoint at root
-    @app.get("/", tags=["Health"])
-    async def root() -> dict:
-        """Root endpoint - Health check"""
-        return {
-            "status": "healthy",
-            "service": "MediVision AI",
-            "version": "1.0.0",
-            "message": "Welcome to MediVision AI - Intelligent Medical Imaging Analysis"
-        }
-    
-    @app.get("/health", tags=["Health"])
-    async def health_check() -> dict:
-        """Detailed health check endpoint"""
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "ai_services": "ready",
-            "storage": "available"
-        }
-    
-    return app
+# Create FastAPI app
+app = FastAPI(
+    title="MediScan AI - ML Backend",
+    description="Medical Image Processing API with AI-powered analysis",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(upload.router, prefix="/api", tags=["Upload"])
+app.include_router(analyze.router, prefix="/api", tags=["Analysis"])
+app.include_router(report.router, prefix="/api", tags=["Reports"])
 
 
-# Create the application instance
-app = create_application()
+@app.get("/")
+async def root():
+    return {
+        "service": "MediScan AI - ML Backend",
+        "status": "running",
+        "version": "1.0.0"
+    }
 
 
-if __name__ == "__main__":
-    import uvicorn
-    
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=settings.PORT,
-        reload=settings.DEBUG,
-        workers=1 if settings.DEBUG else 4,
-    )
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "models_loaded": inference_engine is not None and inference_engine.is_ready
+    }
+
+
+def get_inference_engine() -> InferenceEngine:
+    """Dependency injection for inference engine"""
+    return inference_engine
