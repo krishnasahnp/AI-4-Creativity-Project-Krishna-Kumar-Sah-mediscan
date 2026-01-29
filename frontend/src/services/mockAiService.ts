@@ -160,28 +160,40 @@ export const generateAIAnalysis = (modality: string, bodyPart: string): AIAnalys
   if (mod === 'XRAY' || mod === 'X-RAY') {
      return {
         ...baseReport,
+        quality: {
+           score: 'Good',
+           confidenceImpact: 'High',
+           details: 'Proper exposure factors. No rotation.'
+        },
         findings: {
            visualObservations: [
-              'There is a linear lucency traversing the distal radius.',
-              'Soft tissue swelling is noted near the wrist.',
-              'No dislocation of the carpal bones.'
+              'Complete transverse fracture of the distal radial metaphysis approx 2cm proximal to the articular surface.',
+              'Associated avulsion fracture of the ulnar styloid process.',
+              'Dorsal angulation of the distal fracture fragment (Colles’ type configuration).',
+              'Soft tissue swelling in the dorsal wrist aspect.'
            ],
            highlightedRegions: [
-              'Red circle highlights the fracture line.',
-              'Heatmap indicates area of soft tissue inflammation.'
+              'Red overlay: Automatic fracture line detection.',
+              'Yellow heatmap: Soft tissue inflammation zone.'
            ]
         },
         measurements: {
            data: [
-              'Fracture displacement: <2mm.',
-              'Angulation: 10 degrees dorsal.'
+              'Dorsal Tilt: 20 degrees.',
+              'Radial Shortening: 4 mm.',
+              'Ulnar Variance: Positive (+2mm).'
            ]
         },
+        uncertainty: {
+           confidenceScore: 0.95,
+           explanation: 'High confidence. Fracture lines are sharply defined.'
+        },
         patientSupport: {
-           explanation: 'The X-ray shows a break (fracture) near the wrist bone. The bones are slightly out of line but not severely displaced.',
+           explanation: 'The X-ray shows a clean break near the wrist (distal radius) where the bone is tilted backward. There is also a tiny chip fracture on the small bone (ulna). This is a common injury pattern often caused by falling on an outstretched hand.',
            nextSteps: [
-              'Orthopedic consultation for casting or splinting.',
-              'Follow-up X-rays to ensure proper healing.'
+              'Urgent Orthopedic consult for reduction and stabilization.',
+              'Splint initially; cast likely required.',
+              'Follow-up X-rays in 1 week to check alignment.'
            ]
         }
      };
