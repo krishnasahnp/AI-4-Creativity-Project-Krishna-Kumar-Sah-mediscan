@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import ImageViewer from '@/components/viewer/ImageViewer';
+import AIReviewPanel from '@/components/viewer/AIReviewPanel';
+import ConsentModal from '@/components/ui/ConsentModal';
+import ConfidenceBadge from '@/components/ui/ConfidenceBadge';
+import { useKeyboardShortcuts, getViewerShortcuts, KeyboardShortcutsHelp } from '@/hooks/useKeyboardShortcuts';
 import {
   Brain,
   FileText,
@@ -18,6 +22,28 @@ import {
 export default function StudyViewerPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'findings' | 'report' | 'chat'>('findings');
+  const [showConsent, setShowConsent] = useState(true);
+  const [currentSlice, setCurrentSlice] = useState(60);
+  const [showMask, setShowMask] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+
+  // Keyboard shortcuts
+  const shortcuts = getViewerShortcuts({
+    nextSlice: () => setCurrentSlice(s => Math.min(s + 1, 120)),
+    prevSlice: () => setCurrentSlice(s => Math.max(s - 1, 1)),
+    zoomIn: () => console.log('Zoom in'),
+    zoomOut: () => console.log('Zoom out'),
+    resetView: () => setCurrentSlice(60),
+    toggleMask: () => setShowMask(m => !m),
+    toggleHeatmap: () => setShowHeatmap(h => !h),
+    exportImage: () => console.log('Export image'),
+    goToFirst: () => setCurrentSlice(1),
+    goToLast: () => setCurrentSlice(120),
+    play: () => console.log('Play/Pause'),
+    increaseWindow: () => console.log('Increase window'),
+    decreaseWindow: () => console.log('Decrease window'),
+  });
+  useKeyboardShortcuts({ shortcuts, enabled: !showConsent });
 
   const findings = [
     {
@@ -40,6 +66,16 @@ export default function StudyViewerPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex">
+      {/* Consent Modal */}
+      <ConsentModal
+        isOpen={showConsent}
+        onAccept={() => setShowConsent(false)}
+        onDecline={() => window.history.back()}
+      />
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp shortcuts={shortcuts} />
+
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
       <div className="flex-1 flex flex-col">
@@ -51,7 +87,8 @@ export default function StudyViewerPage() {
             <div className="col-span-2 h-full">
               <ImageViewer 
                 totalSlices={120}
-                currentSlice={60}
+                currentSlice={currentSlice}
+                onSliceChange={setCurrentSlice}
                 metadata={{
                   modality: 'CT',
                   bodyPart: 'Chest',
