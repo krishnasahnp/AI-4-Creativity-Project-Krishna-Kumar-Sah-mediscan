@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, 
   ShieldCheck, 
@@ -9,9 +9,42 @@ import {
   HelpCircle, 
   UserCheck, 
   ArrowRight,
-  FileText
+  FileText,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { AIAnalysisReport } from '@/types/analysis';
+
+function ReportSection({ title, icon: Icon, color, children, defaultOpen = true }: any) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-xl border border-slate-700 bg-slate-800 overflow-hidden transition-all duration-200">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 hover:bg-slate-700/50 transition-colors"
+      >
+        <h3 className={`font-semibold flex items-center gap-2 ${color}`}>
+            <Icon className="w-5 h-5" /> {title}
+        </h3>
+        {isOpen ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+            <motion.div 
+                initial={{ height: 0, opacity: 0 }} 
+                animate={{ height: 'auto', opacity: 1 }} 
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+            >
+                <div className="p-4 pt-0 border-t border-slate-700/50 text-slate-300 text-sm">
+                    {children}
+                </div>
+            </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function AnalysisReport({ report }: { report: AIAnalysisReport }) {
   const [viewMode, setViewMode] = useState<'clinician' | 'patient'>('clinician');
@@ -36,7 +69,7 @@ export default function AnalysisReport({ report }: { report: AIAnalysisReport })
          </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         
         {/* 1. Overview & Quality */}
         <div className="grid grid-cols-2 gap-4">
@@ -64,53 +97,40 @@ export default function AnalysisReport({ report }: { report: AIAnalysisReport })
         </div>
 
         {viewMode === 'clinician' ? (
-           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
               
-              {/* 3. Findings */}
-              <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
-                 <h3 className="font-semibold mb-3 flex items-center gap-2 text-purple-400">
-                    <Eye className="w-5 h-5" /> AI Visual Observations
-                 </h3>
+              <ReportSection title="AI Visual Observations" icon={Eye} color="text-purple-400">
                  <ul className="space-y-2">
                     {report.findings.visualObservations.map((obs, i) => (
-                       <li key={i} className="flex gap-2 text-sm text-slate-300">
+                       <li key={i} className="flex gap-2">
                           <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0" />
                           {obs}
                        </li>
                     ))}
                  </ul>
-              </div>
+              </ReportSection>
 
-               {/* 4. Explainability */}
-               <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
-                 <h3 className="font-semibold mb-3 flex items-center gap-2 text-orange-400">
-                    <Activity className="w-5 h-5" /> Evaluation Explainability
-                 </h3>
+              <ReportSection title="Evaluation Explainability" icon={Activity} color="text-orange-400">
                  <ul className="space-y-2">
                     {report.findings.highlightedRegions.map((region, i) => (
-                       <li key={i} className="flex gap-2 text-sm text-slate-300">
+                       <li key={i} className="flex gap-2">
                           <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-orange-400 flex-shrink-0" />
                           {region}
                        </li>
                     ))}
                  </ul>
-              </div>
+              </ReportSection>
 
-              {/* 5. Measurements */}
-              <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
-                 <h3 className="font-semibold mb-3 flex items-center gap-2 text-blue-400">
-                    <Ruler className="w-5 h-5" /> Quantitative Metrics
-                 </h3>
+              <ReportSection title="Quantitative Metrics" icon={Ruler} color="text-blue-400">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {report.measurements.data.map((metric, i) => (
-                       <div key={i} className="p-2 bg-slate-900 rounded text-sm text-blue-300 font-mono">
+                       <div key={i} className="p-2 bg-slate-900 rounded text-sm text-blue-300 font-mono border border-slate-700/50">
                           {metric}
                        </div>
                     ))}
                  </div>
-              </div>
+              </ReportSection>
 
-              {/* 6. Confidence */}
                <div className="p-4 rounded-xl bg-slate-800 border border-slate-700">
                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-gray-400">
                     <HelpCircle className="w-5 h-5" /> Risk & Uncertainty
@@ -128,7 +148,7 @@ export default function AnalysisReport({ report }: { report: AIAnalysisReport })
         ) : (
            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               
-              {/* 7. Patient Friendly */}
+              {/* Patient Friendly */}
               <div className="p-5 rounded-xl bg-teal-500/10 border border-teal-500/30">
                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-teal-400">
                     <UserCheck className="w-5 h-5" /> Patient Summary
@@ -138,7 +158,7 @@ export default function AnalysisReport({ report }: { report: AIAnalysisReport })
                  </p>
               </div>
 
-              {/* 8. Next Steps */}
+              {/* Next Steps */}
                <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700">
                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-slate-300">
                     <ArrowRight className="w-5 h-5" /> Suggested Next Steps
@@ -156,7 +176,7 @@ export default function AnalysisReport({ report }: { report: AIAnalysisReport })
            </motion.div>
         )}
 
-         {/* 9. Disclaimer */}
+         {/* Disclaimer */}
          <div className="mt-8 pt-4 border-t border-slate-800 text-center">
             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">
                <AlertTriangle className="w-3 h-3 inline mr-1 mb-0.5" /> Medical Disclaimer
