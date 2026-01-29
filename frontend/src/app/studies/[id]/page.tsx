@@ -133,11 +133,42 @@ export default function StudyViewerPage() {
                     windowPreset: 'Default'
                 }}
               />
-              {/* Scan Technique Overlay */}
-              <div className="absolute top-4 left-4 bg-black/50 backdrop-blur px-3 py-1.5 rounded text-xs text-white border border-white/10">
-                <p className="font-mono text-blue-400">PROTOCOL: {report.overview.modality} Default</p>
-                <p className="opacity-70">kV: 120 • mAs: 240 • Slice: 1.0mm</p>
-                {currentScan && <p className="opacity-70 mt-1">Scan ID: {currentScan.id} • {currentScan.seriesCount} Series</p>}
+              {/* Scan Technique Overlay - Detailed Medical Specs */}
+              <div className="absolute top-4 left-4 bg-black/70 backdrop-blur-md px-4 py-3 rounded-lg text-xs text-white border border-white/10 shadow-xl max-w-xs">
+                <div className="flex items-center gap-2 mb-2 border-b border-white/10 pb-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <p className="font-mono font-bold text-blue-400 tracking-wide uppercase">
+                        {report.overview.modality} PROTOCOL: {report.overview.region} HELICAL
+                    </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 opacity-90 font-mono text-[10px]">
+                    <div className="text-slate-400">Scanner:</div>
+                    <div className="text-right">SIEMENS SOMATOM Force</div>
+                    
+                    <div className="text-slate-400">Acq Time:</div>
+                    <div className="text-right">{new Date().toISOString().split('T')[0]} 09:42:15</div>
+                    
+                    <div className="text-slate-400">Technique:</div>
+                    <div className="text-right">120kV / 240mAs</div>
+                    
+                    <div className="text-slate-400">Geometry:</div>
+                    <div className="text-right">1.0mm / 0.5mm Int</div>
+                    
+                    <div className="text-slate-400">Dose (DLP):</div>
+                    <div className="text-right text-orange-300">420 mGy*cm</div>
+                    
+                    <div className="text-slate-400">Position:</div>
+                    <div className="text-right">HFS (Supine)</div>
+                    
+                    <div className="text-slate-400">Matrix:</div>
+                    <div className="text-right">512 x 512 / 12 bit</div>
+                </div>
+
+                <div className="mt-2 pt-1 border-t border-white/10 flex justify-between uppercase tracking-wider text-[9px] text-slate-500">
+                    <span>ACC: {currentScan?.id || 'SC-001'}</span>
+                    <span>SERIES: {currentScan ? currentScan.seriesCount : 4}01</span>
+                </div>
               </div>
             </div>
 
