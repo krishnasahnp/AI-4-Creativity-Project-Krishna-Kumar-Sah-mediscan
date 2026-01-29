@@ -182,7 +182,7 @@ export default function StudyViewerPage() {
                 {activeTab === 'analysis' && (
                     <AnalysisReport 
                         report={report} 
-                        imageUrl="/placeholder-ct.png"
+                        imageUrl="/placeholder-ct.svg"
                     />
                 )}
                 {/* Note: In a real app, imageUrl would be dynamic based on currentScan.url */}

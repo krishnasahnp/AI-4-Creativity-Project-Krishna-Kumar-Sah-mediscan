@@ -52,7 +52,7 @@ const windowPresets = [
 ];
 
 export default function ImageViewer({
-  imageUrl = '/placeholder-ct.png',
+  imageUrl = '/placeholder-ct.svg',
   totalSlices = 100,
   currentSlice = 50,
   onSliceChange,
