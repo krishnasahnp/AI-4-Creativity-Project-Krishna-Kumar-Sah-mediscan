@@ -17,6 +17,11 @@ import {
   TrendingUp,
   Activity,
   Microscope,
+  Mic,
+  Paperclip,
+  Send,
+  Image as ImageIcon,
+  Loader2,
 } from 'lucide-react';
 import { useCases, Scan } from '@/context/CasesContext';
 
@@ -168,30 +173,111 @@ function TabButton({ active, icon: Icon, label, onClick }: any) {
   );
 }
 
+
 function ChatPanel() {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'I have analyzed the current study. Based on the findings, do you have any specific query regarding the pathology?' }
+    { role: 'assistant', content: 'Hello. I have analyzed the current study. I can help explain the findings or answer general questions. How can I assist you today?' }
   ]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    
+    const userMsg = input;
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setInput('');
+    setIsTyping(true);
+
+    // Simulate AI Delay
+    setTimeout(() => {
+        setIsTyping(false);
+        let response = "I understand your concern. Based on the scan analysis, there are no critical findings that require immediate emergency intervention, but a follow-up with your specialist is recommended to review the highlighted regions.";
+        
+        if (userMsg.toLowerCase().includes('serious') || userMsg.toLowerCase().includes('cancer')) {
+            response = "I cannot provide a medical diagnosis. However, the analysis shows a region of interest with increased density. This pattern is common in many benign conditions but requires clinical correlation.";
+        } else if (userMsg.toLowerCase().includes('next')) {
+            response = "Suggested next steps include: 1. Clinical examination by a pulmonologist/neurologist. 2. Comparison with prior imaging if available.";
+        }
+
+        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    }, 1500);
+  };
+
+  const toggleVoice = () => {
+    if (!isListening) {
+        setIsListening(true);
+        setTimeout(() => {
+            setIsListening(false);
+            setInput(prev => prev + " What does the opacity in the upper lobe mean?");
+        }, 2000);
+    } else {
+        setIsListening(false);
+    }
+  };
 
   return (
-    <div className="p-4 h-full flex flex-col">
-      <div className="flex-1 overflow-auto space-y-3 mb-4">
+    <div className="p-4 h-full flex flex-col relative">
+      <div className="flex-1 overflow-auto space-y-4 mb-4 pr-2">
         {messages.map((msg, i) => (
-          <div key={i} className={`p-3 rounded-lg text-sm ${msg.role === 'user' ? 'bg-blue-600 ml-8 text-white' : 'bg-slate-700 mr-8 text-slate-200'}`}>
-            {msg.content}
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[85%] p-3.5 rounded-2xl text-sm leading-relaxed ${
+                msg.role === 'user' 
+                ? 'bg-blue-600 text-white rounded-br-none' 
+                : 'bg-slate-700 text-slate-100 rounded-bl-none shadow-sm border border-slate-600'
+            }`}>
+              {msg.content}
+            </div>
           </div>
         ))}
+        {isTyping && (
+            <div className="flex justify-start">
+                <div className="bg-slate-800 p-3 rounded-2xl rounded-bl-none flex gap-1 items-center">
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </div>
+            </div>
+        )}
       </div>
-      <div className="flex gap-2">
-        <input 
-           className="flex-1 bg-slate-800 border-none rounded-lg px-4 py-2 text-white focus:ring-1 focus:ring-blue-500" 
-           placeholder="Ask AI..." 
-           value={input} 
-           onChange={e => setInput(e.target.value)}
-        />
-        <button className="bg-blue-600 px-4 py-2 rounded-lg text-white font-medium hover:bg-blue-700">Send</button>
+
+      {/* Input Area */}
+      <div className="bg-slate-800 p-2 rounded-xl border border-slate-700 flex items-end gap-2">
+        <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+            <Paperclip className="w-5 h-5" />
+        </button>
+        <div className="flex-1">
+            <textarea 
+                className="w-full bg-transparent border-none text-white focus:ring-0 p-2 text-sm max-h-32 resize-none placeholder-slate-500"
+                placeholder={isListening ? "Listening..." : "Ask anything about this scan..."}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                rows={1}
+            />
+        </div>
+        <button 
+            onClick={toggleVoice}
+            className={`p-2 rounded-lg transition-all ${isListening ? 'bg-red-500/20 text-red-500 animate-pulse' : 'text-slate-400 hover:text-white hover:bg-slate-700'}`}
+        >
+            <Mic className="w-5 h-5" />
+        </button>
+        <button 
+            onClick={handleSend}
+            disabled={!input.trim() && !isListening}
+            className={`p-2 rounded-lg transition-all ${
+                input.trim() ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-700 text-slate-500'
+            }`}
+        >
+            <Send className="w-4 h-4" />
+        </button>
       </div>
+      
+      {/* Disclaimer */}
+      <p className="text-[10px] text-center text-slate-600 mt-2">
+        AI Assistant may make mistakes. Always check important info.
+      </p>
     </div>
   );
 }
