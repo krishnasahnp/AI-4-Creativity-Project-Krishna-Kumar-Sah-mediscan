@@ -71,7 +71,7 @@ export default function AnalyzePage() {
   const router = useRouter();
 
   // Filter pending cases
-  const pendingCases = cases.filter(c => c.status === 'pending' || c.status === 'uploading' || (c.status === 'in_progress' && !c.aiFindings));
+  const pendingCases = cases.filter(c => c.status === 'pending' || (c.status === 'in_progress' && !c.aiFindings));
 
   const handleRunAnalysis = async (caseId: string) => {
     if (!selectedModel) {

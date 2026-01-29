@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -37,7 +37,7 @@ const modalityColors: Record<string, { bg: string; text: string }> = {
   'X-Ray': { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24' },
 };
 
-export default function CasesPage() {
+function CasesContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
@@ -78,6 +78,7 @@ export default function CasesPage() {
       createdAt: today,
       aiFindings: 0,
       tags: newCase.isUrgent ? ['urgent'] : [],
+      scans: [] // Initialize empty scans array
     };
 
     addCase(newCaseEntry);
@@ -427,5 +428,13 @@ export default function CasesPage() {
       </div>
     </div>
     </AuthGuard>
+  );
+}
+
+export default function CasesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[var(--color-bg-primary)] flex items-center justify-center text-[var(--color-text-secondary)]">Loading cases...</div>}>
+      <CasesContent />
+    </Suspense>
   );
 }
