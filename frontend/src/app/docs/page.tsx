@@ -79,7 +79,7 @@ export default function DocsPage() {
               <p className="text-[var(--color-text-secondary)]">
                 Our AI models automatically detect potential pathologies. Findings are categorized by urgency:
               </p>
-              <div className="grid gap-4 mt-4">
+               <div className="grid gap-4 mt-4">
                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
                     <h4 className="font-bold text-red-400 flex items-center gap-2">
                        <ShieldCheck className="w-4 h-4" /> High Urgency
@@ -91,6 +91,54 @@ export default function DocsPage() {
                        <Activity className="w-4 h-4" /> Moderate Urgency
                     </h4>
                     <p className="text-sm mt-1 text-gray-400">Significant findings that should be reviewed soon (e.g., Nodule, Mass).</p>
+                 </div>
+              </div>
+            </section>
+
+            {/* AI Capabilities Breakdown */}
+            <section id="capabilities" className="space-y-6">
+              <div className="flex items-center gap-3 pb-2 border-b border-[var(--color-border)]">
+                 <Search className="w-6 h-6 text-pink-400" />
+                 <h2 className="text-2xl font-semibold">What AI Can Analyze (Per Modality)</h2>
+              </div>
+              
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-6 space-y-6">
+                 <div>
+                    <h3 className="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2">
+                       🧠 CT Scan (Brain / Chest / Abdomen)
+                    </h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-8">
+                       <div>
+                          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-2">What AI Scans</h4>
+                          <ul className="space-y-2 text-sm text-slate-300">
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5"/>Tissue density (HU values)</li>
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5"/>Shape abnormalities</li>
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5"/>Symmetry/asymmetry</li>
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5"/>Size & volume of regions</li>
+                          </ul>
+                       </div>
+
+                       <div>
+                          <h4 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-2">What AI Detects</h4>
+                          <ul className="space-y-2 text-sm text-slate-300">
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5"/>Abnormal regions (lesion, bleed, consolidation)</li>
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5"/>Approximate location (L/R, Upper/Lower)</li>
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5"/>Change across slices</li>
+                             <li className="flex gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5"/>Data quality issues (motion blur)</li>
+                          </ul>
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="pt-6 border-t border-slate-700">
+                    <h4 className="text-sm font-bold uppercase tracking-wider text-green-400 mb-3">Delivered Outputs</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                       <span className="bg-slate-900 rounded px-3 py-2 text-xs text-center border border-slate-700">Highlights (Mask/Heatmap)</span>
+                       <span className="bg-slate-900 rounded px-3 py-2 text-xs text-center border border-slate-700">Measurements (mm, cc)</span>
+                       <span className="bg-slate-900 rounded px-3 py-2 text-xs text-center border border-slate-700">Confidence Score</span>
+                       <span className="bg-slate-900 rounded px-3 py-2 text-xs text-center border border-slate-700">Doctor-Style Explanation</span>
+                    </div>
                  </div>
               </div>
             </section>
