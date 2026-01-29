@@ -11,9 +11,28 @@ import {
   ArrowRight,
   FileText,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Maximize2,
+  X
 } from 'lucide-react';
 import { AIAnalysisReport } from '@/types/analysis';
+
+// Inline SVG Thumbnail Component (Guaranteed to Render)
+function CTScanThumbnail() {
+  return (
+    <svg viewBox="0 0 200 120" className="w-full h-full">
+      <rect width="100%" height="100%" fill="#0f172a"/>
+      <circle cx="100" cy="60" r="50" fill="#1e293b"/>
+      <ellipse cx="100" cy="45" rx="20" ry="12" fill="#334155" opacity="0.6"/>
+      <ellipse cx="75" cy="60" rx="12" ry="20" fill="#334155" opacity="0.4" transform="rotate(15 75 60)"/>
+      <ellipse cx="125" cy="60" rx="12" ry="20" fill="#334155" opacity="0.4" transform="rotate(-15 125 60)"/>
+      <circle cx="130" cy="50" r="4" fill="white" opacity="0.9">
+        <animate attributeName="opacity" values="0.9;0.4;0.9" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      <text x="100" y="110" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="sans-serif">CT SCAN</text>
+    </svg>
+  );
+}
 
 function ReportSection({ title, icon: Icon, color, children, defaultOpen = true }: any) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -48,6 +67,7 @@ function ReportSection({ title, icon: Icon, color, children, defaultOpen = true 
 
 export default function AnalysisReport({ report, imageUrl }: { report: AIAnalysisReport; imageUrl?: string }) {
   const [viewMode, setViewMode] = useState<'clinician' | 'patient'>('clinician');
+  const [showFullImage, setShowFullImage] = useState(false);
 
   return (
     <div className="flex flex-col h-full bg-[#0f172a] text-slate-100 overflow-hidden">
@@ -78,21 +98,54 @@ export default function AnalysisReport({ report, imageUrl }: { report: AIAnalysi
                  <FileText className="w-3 h-3" /> Scan Overview
               </h4>
               
-              {/* Thumbnail Image */}
-              {imageUrl && (
-                <div className="mb-3 rounded-lg overflow-hidden border border-slate-700 relative h-32 bg-black">
-                    <img 
-                        src={imageUrl} 
-                        alt="Scan Thumbnail" 
-                        className="w-full h-full object-cover opacity-80"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end p-2">
-                        <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">
-                            Source Image
-                        </span>
-                    </div>
-                </div>
-              )}
+              {/* Thumbnail Image - Always Renders */}
+              <div className="mb-3 rounded-lg overflow-hidden border border-slate-700 relative h-32 bg-black">
+                  <CTScanThumbnail />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end justify-between p-2">
+                      <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/30">
+                          Source Image
+                      </span>
+                      <button 
+                          onClick={() => setShowFullImage(true)}
+                          className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30 flex items-center gap-1 hover:bg-purple-500/40 transition-colors"
+                      >
+                          <Maximize2 className="w-3 h-3" /> View Full
+                      </button>
+                  </div>
+              </div>
+
+              {/* Fullscreen Modal */}
+              <AnimatePresence>
+                {showFullImage && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8"
+                        onClick={() => setShowFullImage(false)}
+                    >
+                        <button 
+                            className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-slate-700 transition-colors"
+                            onClick={() => setShowFullImage(false)}
+                        >
+                            <X className="w-6 h-6 text-white" />
+                        </button>
+                        <div className="max-w-2xl max-h-[80vh] rounded-xl overflow-hidden border-2 border-slate-600 shadow-2xl">
+                            <svg viewBox="0 0 512 512" className="w-full h-full">
+                                <rect width="100%" height="100%" fill="#0f172a"/>
+                                <circle cx="256" cy="256" r="200" fill="#1e293b"/>
+                                <ellipse cx="256" cy="180" rx="64" ry="40" fill="#334155" opacity="0.6"/>
+                                <ellipse cx="180" cy="256" rx="40" ry="64" fill="#334155" opacity="0.4" transform="rotate(15 180 256)"/>
+                                <ellipse cx="332" cy="256" rx="40" ry="64" fill="#334155" opacity="0.4" transform="rotate(-15 332 256)"/>
+                                <circle cx="345" cy="230" r="10" fill="white" opacity="0.9">
+                                    <animate attributeName="opacity" values="0.9;0.4;0.9" dur="2s" repeatCount="indefinite"/>
+                                </circle>
+                                <text x="256" y="480" textAnchor="middle" fill="#64748b" fontSize="16" fontFamily="sans-serif">{report.overview.modality} - {report.overview.region}</text>
+                            </svg>
+                        </div>
+                    </motion.div>
+                )}
+              </AnimatePresence>
 
               <p className="font-medium text-sm text-white">{report.overview.description}</p>
               <div className="mt-2 flex gap-2">
