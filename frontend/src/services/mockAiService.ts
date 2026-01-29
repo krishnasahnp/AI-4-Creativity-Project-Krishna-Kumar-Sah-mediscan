@@ -40,30 +40,32 @@ export const generateAIAnalysis = (modality: string, bodyPart: string): AIAnalys
       ...baseReport,
       findings: {
         visualObservations: [
-          'An area of increased density is observed in the right upper lobe compared to surrounding tissue.',
-          'Small calcifications are visible in the mediastinal lymph nodes.',
-          'No evidence of pleural effusion or pneumothorax.'
+          'A hyperdense irregular nodular opacity is observed in the right upper lobe (RUL) apical segment.',
+          'Mean attenuation measures 45 HU (Hounsfield Units).',
+          'Punctate calcifications suspected in the subcarinal (station 7) lymph nodes.',
+          'No pleural effusion, pneumothorax, or consolidation.'
         ],
         highlightedRegions: [
-          'The highlighted area in red indicates the region of increased density (nodule) that influenced the AI’s assessment most.',
-          'Blue outlines represent segmented lung fields.'
+          'Red overlay: RUL Nodule segmentation (Dice score: 0.94).',
+          'Blue outlines: Automated lung field segmentation.'
         ]
       },
       measurements: {
         data: [
-          'The highlighted nodule measures approximately 11.2 mm at its widest point.',
-          'Lung volume is within normal estimated limits.'
+          'Nodule Size: 11.2 x 9.8 mm (axial).',
+          'Volume: 1.4 cc.',
+          'Mediastinal Lymph Node: 6mm short axis.'
         ]
       },
       uncertainty: {
         confidenceScore: 0.92,
-        explanation: 'High confidence due to clear contrast between the nodule and healthy lung parenchyma.'
+        explanation: 'High confidence due to clear margin definition and contrast resolution.'
       },
       patientSupport: {
-        explanation: 'The scan shows a small spot (nodule) in the upper right part of the lung that looks different from the surrounding tissue. This does not automatically mean it is cancer, but it is a distinct finding that a doctor will want to check.',
+        explanation: 'The scan shows a small spot (nodule) in the upper right part of the lung. It measures about 1 cm. While it looks different from normal tissue, many such spots are benign. Your doctor will look at the shape and density to decide the next steps.',
         nextSteps: [
-          'A healthcare professional may recommend a follow-up CT scan in 3-6 months to see if the spot stays the same.',
-          'Comparison with previous chest X-rays or CTs if available.'
+          'Fleischner Society guidelines suggest follow-up CT in 3-6 months.',
+          'Comparison with prior imaging (if old scans exist) is crucial.'
         ]
       }
     };
@@ -76,34 +78,37 @@ export const generateAIAnalysis = (modality: string, bodyPart: string): AIAnalys
       quality: {
          score: 'Good',
          confidenceImpact: 'High',
-         details: 'Excellent T2/FLAIR contrast resolution with no significant motion artifacts.'
+         details: 'T2/FLAIR sequences show optimal signal-to-noise ratio. Motion artifacts absent.'
       },
       findings: {
         visualObservations: [
-          'Multiple hyperintense foci are observed in the periventricular white matter detailed in the T2-weighted sequence.',
-          'No significant mass effect or midline shift is present.',
-          'Ventricles appear normal in size and configuration.'
+          'Multiple T2-hyperintense foci in the periventricular and subcortical white matter.',
+          'Lesions are ovoid and perpendicular to the ventricular surface (Dawson’s fingers).',
+          'No enhancing active lesions on post-contrast T1.',
+          'Ventricles and sulci generally preserved for age.'
         ],
         highlightedRegions: [
-          'Heatmap overlays (orange) highlight the white matter lesions.',
-          'Green contours indicate the ventricular boundary segmentation.'
+          'Orange Heatmap: Probability map of white matter hyperintensities.',
+          'Green Contours: Ventricular volume segmentation.'
         ]
       },
       measurements: {
         data: [
-          'Largest lesion measures 6.5 mm in diameter.',
-          'Total lesion load volume estimation: 3.2 cc.'
+          'Largest Lesion: 6.5 mm (Right Frontal).',
+          'Total Lesion Load: 3.2 cc.',
+          'Brain Parenchymal Fraction: Normal.'
         ]
       },
       uncertainty: {
-        confidenceScore: 0.88,
-        explanation: 'Moderate-High confidence. The lesion pattern is characteristic, though some small artifacts mimic lesions.'
+        confidenceScore: 0.89,
+        explanation: 'High spatial consistency with demyelinating pattern.'
       },
       patientSupport: {
-        explanation: 'The MRI shows several small bright spots in the white matter of the brain. These can be related to various conditions or sometimes normal aging, but their pattern suggests they require review by a neurologist.',
+        explanation: 'The MRI shows several bright spots in the brain\'s white matter. The specific shape and location suggest they might be related to inflammation or previous activity. A neurologist is the best person to interpret this in the context of your symptoms.',
         nextSteps: [
-          'Clinical correlation with symptoms (e.g., vision changes, numbness).',
-          'Follow-up MRI with contrast might be considered by your doctor.'
+          'Neurology consultation recommended.',
+          'Correlate with clinical history (visual disturbances, sensory changes).',
+          'Follow-up MRI with contrast in 6-12 months.'
         ]
       }
     };
@@ -116,34 +121,36 @@ export const generateAIAnalysis = (modality: string, bodyPart: string): AIAnalys
       quality: {
         score: 'Moderate',
         confidenceImpact: 'Medium',
-        details: 'Some shadowing obscures the deep posterior view, common in ultrasound imaging.'
+        details: 'Posterior acoustic attenuation present due to steatosis.'
       },
       findings: {
         visualObservations: [
-          'The liver demonstrates increased echogenicity (brightness) relative to the renal cortex.',
-          'No focal hepatic masses are identified.',
-          'Gallbladder wall appears thin (<3mm).'
+          'Diffuse increased hepatic echogenicity (Bright Liver) suggests Grade 1-2 steatosis.',
+          'Hepatorenal contrast is distinct.',
+          'No focal hypoechoic or hyperechoic masses.',
+          'Portal vein patent with normal hepatopetal flow.'
         ],
         highlightedRegions: [
-          'Yellow overlay highlights the liver parenchyma texture pattern.',
-          'Blue markers indicate the liver-kidney interface.'
+          'Yellow overlay: Liver parenchyma texture classification.',
+          'Blue markers: Liver margin delineation.'
         ]
       },
       measurements: {
         data: [
-          'Liver span: 15.4 cm (upper limits of normal).',
-          'Common Bile Duct: 4mm.'
+          'Liver Span (Mid-Clavicular): 15.4 cm.',
+          'Gallbladder Wall: 2.1 mm (Normal).',
+          'CBD Diameter: 4 mm.'
         ]
       },
       uncertainty: {
-        confidenceScore: 0.78,
-        explanation: 'Moderate confidence. Fatty infiltration can attenuate sound waves, limiting deep visualization.'
+        confidenceScore: 0.82,
+        explanation: 'Moderate confidence. Steatosis reduces sensitivity for deep parenchymal lesions.'
       },
       patientSupport: {
-        explanation: 'The ultrasound suggests the liver has some extra fat deposits (fatty liver). This is a common condition. The gallbladder looks normal.',
+        explanation: 'The liver looks "brighter" than usual on the ultrasound, which often means there is some fat stored in the liver cells (Fatty Liver). This is very common. The rest of the organs look normal.',
         nextSteps: [
-          'Your doctor may suggest lifestyle changes or diet monitoring.',
-          'Periodic blood tests to monitor liver function.'
+          'Discuss liver function tests (blood work) with your doctor.',
+          'Consider lifestyle modifications (diet/exercise).'
         ]
       }
     };
