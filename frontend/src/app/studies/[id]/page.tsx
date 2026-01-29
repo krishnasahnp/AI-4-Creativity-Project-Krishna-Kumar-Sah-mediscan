@@ -186,7 +186,7 @@ export default function StudyViewerPage() {
                     />
                 )}
                 {/* Note: In a real app, imageUrl would be dynamic based on currentScan.url */}
-                {activeTab === 'chat' && <ChatPanel />}
+                {activeTab === 'chat' && <ChatPanel context={report} />}
               </div>
             </div>
           </div>
@@ -211,7 +211,7 @@ function TabButton({ active, icon: Icon, label, onClick }: any) {
 }
 
 
-function ChatPanel() {
+function ChatPanel({ context }: { context: any }) {
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Hello. I have analyzed the current study. I can help explain the findings or answer general questions. How can I assist you today?' }
   ]);
@@ -227,19 +227,24 @@ function ChatPanel() {
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI Delay
-    setTimeout(() => {
-        setIsTyping(false);
-        let response = "I understand your concern. Based on the scan analysis, there are no critical findings that require immediate emergency intervention, but a follow-up with your specialist is recommended to review the highlighted regions.";
+    // Call API Route
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                messages: [...messages, { role: 'user', content: userMsg }],
+                context: context
+            })
+        });
         
-        if (userMsg.toLowerCase().includes('serious') || userMsg.toLowerCase().includes('cancer')) {
-            response = "I cannot provide a medical diagnosis. However, the analysis shows a region of interest with increased density. This pattern is common in many benign conditions but requires clinical correlation.";
-        } else if (userMsg.toLowerCase().includes('next')) {
-            response = "Suggested next steps include: 1. Clinical examination by a pulmonologist/neurologist. 2. Comparison with prior imaging if available.";
-        }
-
-        setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-    }, 1500);
+        const data = await response.json();
+        setMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+    } catch (error) {
+        setMessages(prev => [...prev, { role: 'assistant', content: "I'm having trouble connecting to the analysis server. Please try again." }]);
+    } finally {
+        setIsTyping(false);
+    }
   };
 
   const toggleVoice = () => {
