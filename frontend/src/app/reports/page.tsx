@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -18,6 +19,7 @@ import {
   Calendar,
   User,
   Filter,
+  ArrowRight,
 } from 'lucide-react';
 import ReportDetailModal from '@/components/reports/ReportDetailModal';
 
@@ -87,6 +89,7 @@ const modalityColors: Record<string, { bg: string; text: string }> = {
 };
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -94,8 +97,8 @@ export default function ReportsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleOpenReport = (report: any) => {
-    setSelectedReport(report);
-    setIsModalOpen(true);
+    // Navigate to report detail page
+    router.push(`/reports/${report.id}`);
   };
 
   const filteredReports = reports.filter((report) => {

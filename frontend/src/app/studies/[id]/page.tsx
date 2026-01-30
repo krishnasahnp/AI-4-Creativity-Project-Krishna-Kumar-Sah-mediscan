@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
-import ImageViewer from '@/components/viewer/ImageViewer';
+import FullImageViewer from '@/components/viewer/FullImageViewer';
 import ConsentModal from '@/components/ui/ConsentModal';
 import { useKeyboardShortcuts, getViewerShortcuts, KeyboardShortcutsHelp } from '@/hooks/useKeyboardShortcuts';
 import {
@@ -91,7 +91,7 @@ export default function StudyViewerPage() {
   useKeyboardShortcuts({ shortcuts, enabled: !showConsent });
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-primary)] flex">
+    <div className="h-screen bg-[var(--color-bg-primary)] flex overflow-hidden">
       <ConsentModal
         isOpen={showConsent}
         onAccept={() => setShowConsent(false)}
@@ -100,13 +100,13 @@ export default function StudyViewerPage() {
       <KeyboardShortcutsHelp shortcuts={shortcuts} />
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         
-        <main className="flex-1 p-4 overflow-hidden">
+        <main className="flex-1 p-4 overflow-hidden min-h-0 flex flex-col">
           {/* Scan Selector Bar */}
           {currentCase && currentCase.scans?.length > 0 && (
-             <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+             <div className="mb-4 flex gap-2 overflow-x-auto pb-1 flex-shrink-0">
                 {currentCase.scans.map(scan => (
                     <button
                         key={scan.id}
@@ -125,17 +125,15 @@ export default function StudyViewerPage() {
              </div>
           )}
 
-          <div className="h-[calc(100%-3.5rem)] grid grid-cols-3 gap-4">
+          <div className="flex-1 grid grid-cols-3 gap-4 overflow-hidden min-h-0">
             <div className="col-span-2 h-full rounded-2xl overflow-hidden border border-[var(--color-border)] bg-black relative">
-              <ImageViewer 
+              <FullImageViewer 
                 totalSlices={currentScan?.seriesCount ? currentScan.seriesCount * 30 : 120}
                 currentSlice={currentSlice}
                 onSliceChange={setCurrentSlice}
-                metadata={{
-                    modality: report.overview.modality,
-                    bodyPart: report.overview.region,
-                    windowPreset: 'Default'
-                }}
+                modality={report.overview.modality}
+                bodyPart={report.overview.region}
+                imageUrl={currentScan?.url}
               />
               {/* Scan Technique Overlay - Detailed Medical Specs */}
               <div className="absolute top-20 left-4 bg-black/70 backdrop-blur-md px-4 py-3 rounded-lg text-xs text-white border border-white/10 shadow-xl max-w-xs transition-all hover:bg-black/80">
@@ -176,17 +174,17 @@ export default function StudyViewerPage() {
               </div>
             </div>
 
-            <div className="h-full flex flex-col">
-              <div className="flex gap-1 p-1 bg-[var(--color-bg-secondary)] rounded-lg mb-4">
+            <div className="h-full flex flex-col min-h-0 overflow-hidden">
+              <div className="flex gap-1 p-1 bg-[var(--color-bg-secondary)] rounded-lg mb-4 flex-shrink-0">
                 <TabButton active={activeTab === 'analysis'} icon={Brain} label="AI Analysis" onClick={() => setActiveTab('analysis')} />
                 <TabButton active={activeTab === 'chat'} icon={MessageSquare} label="Assistant" onClick={() => setActiveTab('chat')} />
               </div>
 
-              <div className="flex-1 overflow-auto rounded-xl border border-slate-800 bg-[#0f172a]">
+              <div className="flex-1 overflow-y-auto rounded-xl border border-slate-800 bg-[#0f172a] min-h-0">
                 {activeTab === 'analysis' && (
                     <AnalysisReport 
                         report={report} 
-                        imageUrl={CT_PLACEHOLDER}
+                        imageUrl={currentScan?.url || CT_PLACEHOLDER}
                     />
                 )}
                 {/* Note: In a real app, imageUrl would be dynamic based on currentScan.url */}

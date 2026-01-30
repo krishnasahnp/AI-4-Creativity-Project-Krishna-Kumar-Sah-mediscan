@@ -31,6 +31,7 @@ interface UploadedFile {
   status: 'pending' | 'uploading' | 'processing' | 'complete' | 'error';
   progress: number;
   error?: string;
+  preview?: string;
 }
 
 import { useCases } from '@/context/CasesContext';
@@ -74,6 +75,7 @@ export default function UploadPage() {
         date: today,
         status: 'complete' as const,
         seriesCount: files.length || 1,
+        url: files[0]?.preview,
     };
 
     let targetCaseId = '';
@@ -113,8 +115,10 @@ export default function UploadPage() {
       name: file.name,
       size: file.size,
       type: file.type,
+      type: file.type,
       status: 'pending',
       progress: 0,
+      preview: URL.createObjectURL(file),
     }));
     setFiles((prev) => [...prev, ...newFiles]);
     

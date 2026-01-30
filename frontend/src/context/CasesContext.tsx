@@ -9,6 +9,7 @@ export interface Scan {
   date: string;
   status: 'processing' | 'complete';
   seriesCount: number;
+  url?: string;
 }
 
 export interface Case {
