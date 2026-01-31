@@ -21,7 +21,11 @@
 | **Student Name**       | **Krishna Kumar Sah**                                                                                   |
 | **Student Number**     | **2318616**                                                                                             |
 | **Project Repository** | [GitHub Repository](https://github.com/krishnasahnp/AI-4-Creativity-Project-Krishna-Kumar-Sah-mediscan) |
-| **Project Video**      | [Watch the Demo]([Insert Link Here])                                                                    |
+| **Project Video**      | [Watch the Demo](https://youtu.be/b5mRqapmSuk)                                                          |
+
+### 🎥 Project Demo
+
+[![MediScan AI Demo](https://img.youtube.com/vi/b5mRqapmSuk/0.jpg)](https://youtu.be/b5mRqapmSuk)
 
 ---
 
