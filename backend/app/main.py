@@ -5,10 +5,13 @@ FastAPI application for medical image analysis
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
+from pathlib import Path
 
-from app.api.routes import upload, analyze, report
+from app.api.routes import analyze
+from app.api.endpoints import reports, cases, studies, auth, upload
 from app.services.inference_engine import InferenceEngine
 
 # Configure logging
@@ -48,18 +51,28 @@ app = FastAPI(
 )
 
 # Configure CORS
+# Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origin_regex='https?://.*',
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Mount static files for uploads
+upload_dir = Path("uploads")
+upload_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(upload_dir)), name="uploads")
+
 # Include routers
-app.include_router(upload.router, prefix="/api", tags=["Upload"])
 app.include_router(analyze.router, prefix="/api", tags=["Analysis"])
-app.include_router(report.router, prefix="/api", tags=["Reports"])
+# V1 API endpoints
+app.include_router(upload.router, prefix="/api/v1/upload", tags=["Upload"])
+app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
+app.include_router(cases.router, prefix="/api/v1/cases", tags=["Cases"])
+app.include_router(studies.router, prefix="/api/v1/studies", tags=["Studies"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 
 
 @app.get("/")

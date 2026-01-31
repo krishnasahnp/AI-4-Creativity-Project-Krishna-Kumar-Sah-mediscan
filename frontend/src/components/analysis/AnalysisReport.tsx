@@ -57,9 +57,9 @@ function ReportSection({ title, icon: Icon, color, children, defaultOpen = true 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="border-t border-slate-700"
           >
             <div className="p-4 text-sm text-slate-300 space-y-2">
@@ -127,9 +127,9 @@ function ClinicalFindingCard({ finding }: { finding: ClinicalFinding }) {
       <AnimatePresence>
         {expanded && (
           <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             className="border-t border-slate-700/50"
           >
             <div className="p-3 space-y-2 text-sm">
@@ -184,7 +184,7 @@ interface AnalysisReportProps {
   imageUrl?: string;
 }
 
-export default function AnalysisReport({ report }: AnalysisReportProps) {
+export default function AnalysisReport({ report, imageUrl }: AnalysisReportProps) {
   const [viewMode, setViewMode] = useState<'clinician' | 'patient'>('clinician');
   const [showFullImage, setShowFullImage] = useState(false);
 

@@ -33,19 +33,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Hardcoded credentials check
-    if (email === 'admin@medivision.com' && password === 'admin123') {
-      const mockUser = {
-        name: 'Dr. Santosh Kumar',
-        email: email,
-        role: 'Chief Radiologist'
-      };
+    try {
+      const protocol = typeof window !== 'undefined' ? window.location.protocol : 'http:';
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+      const API_URL = `${protocol}//${hostname}:8000/api/v1/auth/login`;
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
       
-      setUser(mockUser);
-      localStorage.setItem('medivision_user', JSON.stringify(mockUser));
+      const user = {
+        name: data.user.full_name,
+        email: data.user.email,
+        role: data.user.role
+      };
+
+      setUser(user);
+      localStorage.setItem('medivision_user', JSON.stringify(user));
+      localStorage.setItem('token', data.tokens.access_token);
       return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

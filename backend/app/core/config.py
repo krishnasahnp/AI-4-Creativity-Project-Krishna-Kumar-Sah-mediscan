@@ -57,9 +57,15 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = Field(default="medivision123", description="PostgreSQL password")
     POSTGRES_DB: str = Field(default="medivision_db", description="PostgreSQL database name")
     
+    # Allow overriding via env var
+    DATABASE_URL_VAL: Optional[str] = Field(default=None, alias="DATABASE_URL")
+
     @property
     def DATABASE_URL(self) -> str:
         """Construct the async database URL."""
+        if self.DATABASE_URL_VAL:
+            return self.DATABASE_URL_VAL
+            
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -106,7 +112,7 @@ class Settings(BaseSettings):
         default=500,
         description="Maximum file upload size in MB"
     )
-    ALLOWED_CT_EXTENSIONS: List[str] = [".dcm", ".dicom", ".zip"]
+    ALLOWED_CT_EXTENSIONS: List[str] = [".dcm", ".dicom", ".zip", ".jpg", ".jpeg", ".png", ".webp"]
     ALLOWED_US_IMAGE_EXTENSIONS: List[str] = [".jpg", ".jpeg", ".png", ".dcm"]
     ALLOWED_US_VIDEO_EXTENSIONS: List[str] = [".mp4", ".avi", ".mov"]
     ALLOWED_AUDIO_EXTENSIONS: List[str] = [".wav", ".mp3", ".m4a", ".ogg"]

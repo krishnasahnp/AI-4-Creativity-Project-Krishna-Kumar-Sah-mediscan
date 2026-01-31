@@ -1,28 +1,29 @@
 # MediScan AI - ML Backend
 
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-python-multipart==0.0.6
+fastapi
+uvicorn[standard]
+python-multipart
 
 # DICOM Processing
-pydicom==2.4.4
-python-gdcm==3.0.23
+pydicom
+# python-gdcm  # Commented out
 
 # Image Processing
-numpy==1.26.3
-opencv-python-headless==4.9.0.80
-Pillow==10.2.0
-scikit-image==0.22.0
-
-# Machine Learning
-torch==2.1.2
-torchvision==0.16.2
-timm==0.9.12
-
-# Grad-CAM
-pytorch-grad-cam==1.4.8
+numpy
+Pillow
 
 # Utilities
-pydantic==2.5.3
-python-dotenv==1.0.0
-aiofiles==23.2.1
+pydantic
+pydantic-settings
+python-dotenv
+aiofiles
+typing_extensions
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt
+greenlet
+
+# Database
+sqlalchemy
+aiosqlite
+alembic

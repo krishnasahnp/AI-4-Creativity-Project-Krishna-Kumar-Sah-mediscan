@@ -61,29 +61,25 @@ function CasesContent() {
     }
   }, [searchParams]);
 
-  const handleCreateCase = (e: React.FormEvent) => {
+  const handleCreateCase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCase.patientName || !newCase.patientId) return;
 
-    const caseId = `CASE-${String(cases.length + 1).padStart(3, '0')}`;
-    const today = new Date().toISOString().split('T')[0];
-
+    // We don't need to generate ID locally anymore
+    
     const newCaseEntry = {
-      id: caseId,
       patientId: newCase.patientId,
       patientName: newCase.patientName,
-      status: 'pending' as const,
-      studies: 0,
-      modalities: [newCase.modality],
-      createdAt: today,
-      aiFindings: 0,
+      modality: newCase.modality, // We might need to handle this in backend or tag it
       tags: newCase.isUrgent ? ['urgent'] : [],
-      scans: [] // Initialize empty scans array
+      // Status, id, createdAt handled by backend
     };
 
-    addCase(newCaseEntry);
-    setIsModalOpen(false);
-    setNewCase({ patientName: '', patientId: '', modality: 'CT', isUrgent: false });
+    const success = await addCase(newCaseEntry);
+    if (success) {
+        setIsModalOpen(false);
+        setNewCase({ patientName: '', patientId: '', modality: 'CT', isUrgent: false });
+    }
   };
 
   const filteredCases = cases.filter(c => {

@@ -43,7 +43,9 @@ export const generateAIAnalysis = (modality: string, bodyPart: string): AIAnalys
   };
 
   // --- SCENARIO 1: CT CHEST ---
-  if (mod === 'CT' && part.includes('Chest')) {
+  // Allow 'CT' with generic/missing body part to default to this report for demo purposes
+  const isGenericOrChest = part.includes('Chest') || part === 'Area' || part === 'Unknown' || part === 'Body';
+  if ((mod === 'CT' || mod.includes('COMPUTED TOMOGRAPHY')) && isGenericOrChest) {
     const clinicalFindings: ClinicalFinding[] = [
       {
         name: 'Pulmonary Nodule',
@@ -168,7 +170,9 @@ export const generateAIAnalysis = (modality: string, bodyPart: string): AIAnalys
   }
 
   // --- SCENARIO 2: MRI BRAIN ---
-  if (mod === 'MRI' && (part.includes('Brain') || part.includes('Head'))) {
+  // Allow 'MRI' with generic/missing body part to default to this report
+  const isGenericOrBrain = part.includes('Brain') || part.includes('Head') || part === 'Area' || part === 'Unknown' || part === 'Body';
+  if (mod.includes('MRI') && isGenericOrBrain) {
     const clinicalFindings: ClinicalFinding[] = [
       {
         name: 'White Matter Hyperintensities',

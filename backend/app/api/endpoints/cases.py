@@ -29,6 +29,7 @@ router = APIRouter()
 class CaseCreateRequest(BaseModel):
     """Request to create a new case."""
     patient_id: str = Field(..., min_length=1, max_length=64, description="Anonymized patient ID")
+    patient_name: str = Field(..., min_length=1, max_length=256, description="Patient Name")
     tags: Optional[List[str]] = Field(default_factory=list)
     notes: Optional[str] = None
     priority: int = Field(default=0, ge=0, le=10)
@@ -49,12 +50,16 @@ class StudySummary(BaseModel):
     body_part: Optional[str]
     study_date: Optional[datetime]
     created_at: datetime
+    status: str
+
+
 
 
 class CaseResponse(BaseModel):
     """Case response with studies."""
     id: str
     patient_id: str
+    patient_name: Optional[str]
     status: str
     tags: List[str]
     notes: Optional[str]
@@ -126,6 +131,7 @@ async def list_cases(
     if search:
         search_filter = or_(
             Case.patient_id.ilike(f"%{search}%"),
+            Case.patient_name.ilike(f"%{search}%"),
             Case.notes.ilike(f"%{search}%")
         )
         query = query.where(search_filter)
@@ -157,12 +163,14 @@ async def list_cases(
                 body_part=s.body_part,
                 study_date=s.study_date,
                 created_at=s.created_at,
+                status=s.status.value,
             )
             for s in case.studies
         ]
         items.append(CaseResponse(
             id=str(case.id),
             patient_id=case.patient_id,
+            patient_name=case.patient_name,
             status=case.status.value,
             tags=case.tags or [],
             notes=case.notes,
@@ -202,6 +210,7 @@ async def create_case(
     """
     case = Case(
         patient_id=request.patient_id,
+        patient_name=request.patient_name,
         tags=request.tags or [],
         notes=request.notes,
         priority=request.priority,
@@ -214,6 +223,7 @@ async def create_case(
     return CaseResponse(
         id=str(case.id),
         patient_id=case.patient_id,
+        patient_name=case.patient_name,
         status=case.status.value,
         tags=case.tags or [],
         notes=case.notes,
@@ -258,6 +268,7 @@ async def get_case(
             body_part=s.body_part,
             study_date=s.study_date,
             created_at=s.created_at,
+            status=s.status.value,
         )
         for s in case.studies
     ]
@@ -265,6 +276,7 @@ async def get_case(
     return CaseResponse(
         id=str(case.id),
         patient_id=case.patient_id,
+        patient_name=case.patient_name,
         status=case.status.value,
         tags=case.tags or [],
         notes=case.notes,
@@ -325,6 +337,7 @@ async def update_case(
             body_part=s.body_part,
             study_date=s.study_date,
             created_at=s.created_at,
+            status=s.status.value,
         )
         for s in case.studies
     ]
@@ -332,6 +345,7 @@ async def update_case(
     return CaseResponse(
         id=str(case.id),
         patient_id=case.patient_id,
+        patient_name=case.patient_name,
         status=case.status.value,
         tags=case.tags or [],
         notes=case.notes,

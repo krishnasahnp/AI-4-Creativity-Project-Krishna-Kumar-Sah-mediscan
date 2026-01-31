@@ -39,79 +39,35 @@ import {
   TrendingUp,
   Image
 } from 'lucide-react';
+import { reportService } from '@/services/reportService';
+import { studyService } from '@/services/studyService';
 import VisualReportSection from '@/components/reports/VisualReportSection';
+import Toast from '@/components/ui/Toast';
 
-// Mock reports data with modality info for AI analysis
-const reportsData: Record<string, any> = {
-  'RPT-001': {
-    id: 'RPT-001',
-    studyId: 'STD-2847',
-    patient: 'MRN-45821',
-    patientName: 'John Smith',
-    patientAge: '58 years',
-    patientGender: 'Male',
-    modality: 'CT',
-    bodyPart: 'Chest',
-    title: 'CT Chest with Contrast',
-    status: 'signed',
-    signedBy: 'Dr. Rajesh Kumar',
-    signedAt: '2024-01-15 14:30',
-    referringPhysician: 'Dr. Sarah Williams',
-    clinicalHistory: 'Persistent cough for 3 weeks, history of smoking (30 pack-years). Rule out malignancy.',
-    technique: 'Helical CT with IV iodinated contrast (100mL Omnipaque 350), 1.25mm slice thickness',
-  },
-  'RPT-002': {
-    id: 'RPT-002',
-    studyId: 'STD-2846',
-    patient: 'MRN-45820',
-    patientName: 'Sarah Johnson',
-    patientAge: '42 years',
-    patientGender: 'Female',
-    modality: 'Ultrasound',
-    bodyPart: 'Abdomen',
-    title: 'Thyroid Ultrasound',
-    status: 'draft',
-    signedBy: null,
-    signedAt: null,
-    referringPhysician: 'Dr. Michael Chen',
-    clinicalHistory: 'Palpable thyroid nodule on physical exam. Evaluate for characteristics.',
-    technique: 'High-frequency linear transducer (12-15 MHz), grayscale and color Doppler',
-  },
-  'RPT-003': {
-    id: 'RPT-003',
-    studyId: 'STD-2845',
-    patient: 'MRN-45819',
-    patientName: 'Michael Davis',
-    patientAge: '35 years',
-    patientGender: 'Male',
-    modality: 'CT',
-    bodyPart: 'Chest',
-    title: 'CT Head without Contrast',
-    status: 'pending_signature',
-    signedBy: null,
-    signedAt: null,
-    referringPhysician: 'Dr. Jennifer Brown',
-    clinicalHistory: 'New onset headaches, rule out intracranial pathology.',
-    technique: 'Non-contrast helical CT, 5mm slice thickness',
-  },
-  'RPT-004': {
-    id: 'RPT-004',
-    studyId: 'STD-2844',
-    patient: 'MRN-45818',
-    patientName: 'Emily Wilson',
-    patientAge: '28 years',
-    patientGender: 'Female',
-    modality: 'MRI',
-    bodyPart: 'Brain',
-    title: 'MRI Brain with Contrast',
-    status: 'signed',
-    signedBy: 'Dr. Priya Sharma',
-    signedAt: '2024-01-14 10:15',
-    referringPhysician: 'Dr. Robert Taylor',
-    clinicalHistory: 'Episodes of visual disturbances and numbness. Evaluate for demyelinating disease.',
-    technique: '3T MRI with T1, T2, FLAIR, DWI, and post-gadolinium sequences',
-  },
+// Helper for Image URL (Same as StudyViewer)
+const getImageUrl = (filePath: string) => {
+    if (!filePath) return undefined;
+    
+    // Simplest logic: Strip everything up to the first UUID/CaseID segment
+    let cleanPath = filePath;
+    while(cleanPath.startsWith('./') || cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.startsWith('./') ? cleanPath.substring(2) : cleanPath.substring(1);
+    }
+    
+    if (cleanPath.startsWith('http')) return cleanPath;
+    
+    if (cleanPath.includes('uploads/')) {
+        const parts = cleanPath.split('uploads/');
+        cleanPath = parts[parts.length - 1]; 
+    }
+    
+    const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || `http://${hostname}:8000`;
+    const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+    
+    return `${baseUrl}/uploads/${cleanPath}`;
 };
+
 
 // Collapsible section component
 function ReportSection({ title, icon: Icon, color, children, defaultOpen = true }: any) {
@@ -184,15 +140,76 @@ export default function ReportDetailPage() {
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysisReport | null>(null);
   const [activeTab, setActiveTab] = useState<'report' | 'ai'>('ai');
 
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const reportId = params.id as string;
-    const reportData = reportsData[reportId];
-    if (reportData) {
-      setReport(reportData);
-      // Generate AI analysis based on modality and body part
-      const analysis = generateAIAnalysis(reportData.modality, reportData.bodyPart);
-      setAiAnalysis(analysis);
-    }
+    const fetchReport = async () => {
+        try {
+            // 1. Fetch Report Details
+            // Note: reportService might need to be updated to support getById if not present
+            // If getReportById is missing, we might need to fallback to getReports() and find()
+            // Ensuring we handle both cases.
+            let fetchedReport = null;
+            try {
+                 // Assume endpoint is /reports/{id}
+                 const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/reports/${params.id}`);
+                 if (res.ok) {
+                     fetchedReport = await res.json();
+                 }
+            } catch (e) {
+                console.warn("Direct fetch failed, falling back to list");
+            }
+
+            if (!fetchedReport) {
+                // Fallback: Fetch all and find (not efficient but safe if endpoint missing)
+                const allReports = await reportService.getReports();
+                fetchedReport = allReports.items.find((r: any) => r.id === params.id);
+            }
+            
+            if (!fetchedReport) {
+                setError('Report not found');
+                return;
+            }
+
+            // Normalize report data for UI
+            const uiReport = {
+                ...fetchedReport,
+                title: fetchedReport.title || `${fetchedReport.modality || 'Study'} Report`,
+                patientName: fetchedReport.patient_name || 'Anonymous', // Backend might use snake_case
+                studyId: fetchedReport.study_id,
+                status: fetchedReport.status || 'draft',
+                modality: fetchedReport.modality || 'CT',
+                bodyPart: fetchedReport.body_part || 'Body',
+            };
+            setReport(uiReport);
+            
+            // 2. Generate/Fetch AI Analysis
+            const analysis = generateAIAnalysis(uiReport.modality, uiReport.bodyPart);
+            setAiAnalysis(analysis);
+
+            // 3. Fetch Study Image
+            if (uiReport.studyId) {
+                try {
+                    const study = await studyService.getStudyById(uiReport.studyId);
+                    if (study && study.series && study.series.length > 0) {
+                        const firstSeries = study.series.find((s: any) => s.images && s.images.length > 0);
+                        if (firstSeries && firstSeries.images[0]) {
+                            setImageUrl(getImageUrl(firstSeries.images[0].file_path));
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch study image", err);
+                }
+            }
+
+        } catch (err) {
+            console.error(err);
+            setError('Failed to load report');
+        }
+    };
+    
+    if (params.id) fetchReport();
   }, [params.id]);
 
   if (!report || !aiAnalysis) {
@@ -479,7 +496,7 @@ export default function ReportDetailPage() {
                     </div>
 
                     {/* Visual Report Outputs */}
-                    <VisualReportSection modality={report.modality} />
+                    <VisualReportSection modality={report.modality} imageUrl={imageUrl} />
 
                     {/* Clinical Findings */}
                     {aiAnalysis.findings.clinicalFindings && aiAnalysis.findings.clinicalFindings.length > 0 && (

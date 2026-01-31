@@ -29,16 +29,17 @@ interface VisualFinding {
 interface VisualReportSectionProps {
   modality: string;
   findings?: VisualFinding[];
+  imageUrl?: string;
   onImageClick?: (finding: VisualFinding) => void;
 }
 
 // Generate mock visual findings
-function generateMockVisuals(modality: string): VisualFinding[] {
+function generateMockVisuals(modality: string, imageUrl?: string): VisualFinding[] {
   const baseVisuals: VisualFinding[] = [
     {
       id: 'original',
       title: 'Original Image',
-      thumbnail: '/placeholder-ct.svg',
+      thumbnail: imageUrl || '/placeholder-ct.svg',
       type: 'original',
       description: 'Unprocessed medical image as acquired from scanner',
     },
@@ -175,12 +176,14 @@ function generateMockVisuals(modality: string): VisualFinding[] {
 export default function VisualReportSection({
   modality,
   findings,
+  imageUrl,
   onImageClick,
 }: VisualReportSectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  const visuals = findings || generateMockVisuals(modality);
+  // Pass imageUrl to generator
+  const visuals = findings || generateMockVisuals(modality, imageUrl);
   const currentVisual = visuals[currentIndex];
 
   const typeIcons = {
@@ -230,53 +233,52 @@ export default function VisualReportSection({
         {/* Image */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center relative">
-            {/* Mock medical image with overlay */}
-            <div className="w-3/4 h-3/4 rounded-lg bg-slate-800 relative overflow-hidden">
-              {/* Simulated image */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-64 h-64 rounded-full bg-gradient-radial from-slate-600 via-slate-700 to-slate-800 relative">
-                  {/* Simulated anatomy */}
-                  <div className="absolute inset-12 rounded-full bg-slate-500/30" />
-                  
-                  {/* Overlay based on type */}
-                  {currentVisual.type === 'heatmap' && (
-                    <div 
-                      className="absolute top-1/3 right-1/4 w-16 h-16 rounded-full"
-                      style={{
-                        background: 'radial-gradient(circle, rgba(255,0,0,0.6) 0%, rgba(255,165,0,0.3) 50%, transparent 70%)',
-                      }}
+            
+             {/* Display Actual Image if Valid URL */}
+             {currentVisual.thumbnail && currentVisual.thumbnail.startsWith('http') ? (
+                <div className="w-full h-full flex items-center justify-center bg-black">
+                    <img 
+                        src={currentVisual.thumbnail} 
+                        alt={currentVisual.title}
+                        className="max-w-full max-h-full object-contain"
                     />
-                  )}
-                  {currentVisual.type === 'segmentation' && (
-                    <>
-                      <div className="absolute top-1/4 left-1/4 w-20 h-24 border-2 border-blue-400 rounded-full opacity-60" />
-                      <div className="absolute top-1/4 right-1/4 w-20 h-24 border-2 border-cyan-400 rounded-full opacity-60" />
-                    </>
-                  )}
-                  {currentVisual.type === 'annotation' && (
-                    <>
-                      <div className="absolute top-1/3 right-1/4 w-8 h-8 border-2 border-yellow-400 rounded-lg" />
-                      <div className="absolute top-[30%] right-[22%] text-yellow-400 text-[10px] font-bold bg-black/50 px-1 rounded">
-                        11.2mm
-                      </div>
-                    </>
-                  )}
                 </div>
-              </div>
-
-              {/* Type Badge */}
-              <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-white text-xs font-bold bg-gradient-to-r ${typeColors[currentVisual.type]}`}>
-                <Icon className="w-3 h-3" />
-                {currentVisual.type.charAt(0).toUpperCase() + currentVisual.type.slice(1)}
-              </div>
-
-              {/* Confidence Badge */}
-              {currentVisual.confidence && (
-                <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/70 text-green-400 text-xs font-bold">
-                  {Math.round(currentVisual.confidence * 100)}% Confidence
+            ) : (
+                /* Mock medical image with overlay */
+                <div className="w-3/4 h-3/4 rounded-lg bg-slate-800 relative overflow-hidden">
+                {/* Simulated image */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-64 h-64 rounded-full bg-gradient-radial from-slate-600 via-slate-700 to-slate-800 relative">
+                    {/* Simulated anatomy */}
+                    <div className="absolute inset-12 rounded-full bg-slate-500/30" />
+                    
+                    {/* Overlay based on type */}
+                    {currentVisual.type === 'heatmap' && (
+                        <div 
+                        className="absolute top-1/3 right-1/4 w-16 h-16 rounded-full"
+                        style={{
+                            background: 'radial-gradient(circle, rgba(255,0,0,0.6) 0%, rgba(255,165,0,0.3) 50%, transparent 70%)',
+                        }}
+                        />
+                    )}
+                    {currentVisual.type === 'segmentation' && (
+                        <>
+                        <div className="absolute top-1/4 left-1/4 w-20 h-24 border-2 border-blue-400 rounded-full opacity-60" />
+                        <div className="absolute top-1/4 right-1/4 w-20 h-24 border-2 border-cyan-400 rounded-full opacity-60" />
+                        </>
+                    )}
+                    {currentVisual.type === 'annotation' && (
+                        <>
+                        <div className="absolute top-1/3 right-1/4 w-8 h-8 border-2 border-yellow-400 rounded-lg" />
+                        <div className="absolute top-[30%] right-[22%] text-yellow-400 text-[10px] font-bold bg-black/50 px-1 rounded">
+                            11.2mm
+                        </div>
+                        </>
+                    )}
+                    </div>
                 </div>
-              )}
-            </div>
+                </div>
+            )}
           </div>
         </div>
 
@@ -373,12 +375,23 @@ export default function VisualReportSection({
             >
               {/* Large image view */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-[500px] h-[500px] rounded-lg bg-slate-800 relative">
-                  {/* Similar to above but larger */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-96 h-96 rounded-full bg-gradient-radial from-slate-600 via-slate-700 to-slate-800" />
-                  </div>
-                </div>
+                 {/* REAL IMAGE RENDER IN LIGHTBOX */}
+                 {currentVisual.thumbnail && currentVisual.thumbnail.startsWith('http') ? (
+                    <div className="w-full h-full flex items-center justify-center bg-black">
+                        <img 
+                            src={currentVisual.thumbnail} 
+                            alt={currentVisual.title}
+                            className="max-w-full max-h-full object-contain"
+                        />
+                    </div>
+                ) : (
+                    <div className="w-[500px] h-[500px] rounded-lg bg-slate-800 relative">
+                    {/* Similar to above but larger */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-96 h-96 rounded-full bg-gradient-radial from-slate-600 via-slate-700 to-slate-800" />
+                    </div>
+                    </div>
+                )}
               </div>
 
               {/* Close button */}

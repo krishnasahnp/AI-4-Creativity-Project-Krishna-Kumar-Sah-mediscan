@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Sidebar from '@/components/layout/Sidebar';
@@ -21,58 +21,11 @@ import {
   Filter,
   ArrowRight,
 } from 'lucide-react';
+import CreateReportModal from '@/components/reports/CreateReportModal';
 import ReportDetailModal from '@/components/reports/ReportDetailModal';
+import { reportService } from '@/services/reportService';
 
-const reports = [
-  {
-    id: 'RPT-001',
-    studyId: 'STD-2847',
-    patient: 'MRN-45821',
-    patientName: 'John Smith',
-    modality: 'CT',
-    title: 'CT Chest with Contrast',
-    status: 'signed',
-    signedBy: 'Dr. Rajesh Kumar',
-    signedAt: '2024-01-15 14:30',
-    findings: 'Pulmonary nodule detected in RLL',
-  },
-  {
-    id: 'RPT-002',
-    studyId: 'STD-2846',
-    patient: 'MRN-45820',
-    patientName: 'Sarah Johnson',
-    modality: 'US',
-    title: 'Thyroid Ultrasound',
-    status: 'draft',
-    signedBy: null,
-    signedAt: null,
-    findings: 'Multiple thyroid nodules',
-  },
-  {
-    id: 'RPT-003',
-    studyId: 'STD-2845',
-    patient: 'MRN-45819',
-    patientName: 'Michael Davis',
-    modality: 'CT',
-    title: 'CT Head without Contrast',
-    status: 'pending_signature',
-    signedBy: null,
-    signedAt: null,
-    findings: 'No acute intracranial abnormality',
-  },
-  {
-    id: 'RPT-004',
-    studyId: 'STD-2844',
-    patient: 'MRN-45818',
-    patientName: 'Emily Wilson',
-    modality: 'MRI',
-    title: 'MRI Brain with Contrast',
-    status: 'signed',
-    signedBy: 'Dr. Priya Sharma',
-    signedAt: '2024-01-14 10:15',
-    findings: 'Normal study, no lesions',
-  },
-];
+// ... (imports)
 
 const statusConfig = {
   signed: { color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)', icon: Check, label: 'Signed' },
@@ -91,14 +44,53 @@ const modalityColors: Record<string, { bg: string; text: string }> = {
 export default function ReportsPage() {
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [reports, setReports] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const fetchReports = async () => {
+    try {
+      setIsLoading(true);
+      const data = await reportService.getReports({ 
+        search: searchQuery, 
+        status: statusFilter 
+      });
+      setReports(data.items);
+    } catch (error) {
+      console.error("Failed to fetch reports", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, [searchQuery, statusFilter]);
 
   const handleOpenReport = (report: any) => {
-    // Navigate to report detail page
     router.push(`/reports/${report.id}`);
+  };
+
+  const handleCreateReport = async (newReportData: any) => {
+    try {
+      // Map form data to API expectation
+      await reportService.createManualReport({
+        patient_id: newReportData.patientId,
+        patient_name: newReportData.patientName,
+        modality: newReportData.modality,
+        title: newReportData.title,
+        study_date: newReportData.studyDate
+      });
+      // Refresh list
+      fetchReports();
+    } catch (error) {
+       console.error("Failed to create report", error);
+       alert("Failed to create report. Please try again.");
+    }
   };
 
   const filteredReports = reports.filter((report) => {
@@ -146,6 +138,7 @@ export default function ReportsPage() {
             </div>
             
             <button 
+              onClick={() => setIsCreateModalOpen(true)}
               className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-white transition-all hover:scale-[1.02]"
               style={{
                 background: 'linear-gradient(135deg, #0d9488, #14b8a6)',
@@ -437,6 +430,12 @@ export default function ReportsPage() {
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
           report={selectedReport} 
+        />
+
+        <CreateReportModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={handleCreateReport}
         />
       </div>
     </div>

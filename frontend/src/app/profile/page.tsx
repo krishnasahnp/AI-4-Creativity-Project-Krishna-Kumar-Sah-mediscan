@@ -21,9 +21,11 @@ export default function ProfilePage() {
           
           <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
              <div className="max-w-4xl mx-auto">
-                <div className="relative h-48 rounded-3xl overflow-hidden mb-16" 
-                     style={{ background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%)' }}>
-                   <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />
+                <div className="relative mb-16">
+                   <div className="h-48 rounded-3xl overflow-hidden relative" 
+                        style={{ background: 'linear-gradient(135deg, #0f766e 0%, #0d9488 50%, #14b8a6 100%)' }}>
+                      <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />
+                   </div>
                    
                    <div className="absolute -bottom-12 left-8 flex items-end gap-6">
                       <div className="w-32 h-32 rounded-3xl border-4 border-[#0c1222] bg-[#1e293b] flex items-center justify-center text-4xl font-bold text-teal-400 shadow-2xl relative">
@@ -34,7 +36,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="mb-4">
                          <h1 className="text-3xl font-bold text-white mb-1">{user?.name}</h1>
-                         <p className="text-teal-100/80 font-medium">{user?.role || 'Senior Radiologist'}</p>
+                         <p className="text-teal-200 font-medium">{user?.role || 'Senior Radiologist'}</p>
                       </div>
                    </div>
                 </div>
@@ -49,7 +51,7 @@ export default function ProfilePage() {
                          </h2>
                          <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
-                               <InfoItem label="Full Name" value={user?.name || 'Dr. Rajesh Kumar'} />
+                               <InfoItem label="Full Name" value={user?.name || 'Dr. Krishna Kumar'} />
                                <InfoItem label="Email" value={user?.email || 'doctor@hospital.com'} />
                                <InfoItem label="Phone" value="+1 (555) 123-4567" />
                                <InfoItem label="Department" value="Radiology" />

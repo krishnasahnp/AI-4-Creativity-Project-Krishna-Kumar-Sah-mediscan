@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,10 +36,13 @@ interface UploadedFile {
 
 import { useCases } from '@/context/CasesContext';
 import AuthGuard from '@/components/auth/AuthGuard';
+import { uploadService } from '@/services/uploadService';
+import { caseService } from '@/services/caseService';
 
 export default function UploadPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [rawFiles, setRawFiles] = useState<File[]>([]);
   const [modality, setModality] = useState<'ct' | 'ultrasound' | 'mri' | 'xray'>('ct');
   const [bodyPart, setBodyPart] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -59,98 +62,58 @@ export default function UploadPage() {
   };
 
   const handleStartAnalysis = async () => {
-    setIsAnalyzing(true);
-    // Simulate AI Processing
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Create scan object
-    const part = bodyPart || BODY_PARTS[modality][0];
-    const today = new Date().toISOString().split('T')[0];
-    const scanId = `SC-${Math.floor(1000 + Math.random() * 9000)}`;
-    
-    const newScan = {
-        id: scanId,
-        modality: modality.toUpperCase(),
-        bodyPart: part,
-        date: today,
-        status: 'complete' as const,
-        seriesCount: files.length || 1,
-        url: files[0]?.preview,
-    };
+    try {
+      setIsAnalyzing(true);
+      
+      let targetCaseId = '';
+      const part = bodyPart || BODY_PARTS[modality][0];
 
-    let targetCaseId = '';
-
-    if (uploadMode === 'new') {
-        // Create new case
-        const caseId = `CASE-${String(cases.length + 1).padStart(3, '0')}`;
-        const newCaseEntry = {
-          id: caseId,
-          patientId: patientId || `MRN-${Math.floor(10000 + Math.random() * 90000)}`,
-          patientName: patientName || (files[0]?.name ? `Patient (${files[0].name.split('.')[0]})` : 'Anonymous Patient'),
-          status: 'complete' as const,
-          studies: 1,
-          scans: [newScan],
-          modalities: [modality.toUpperCase()],
-          createdAt: today,
-          aiFindings: Math.floor(Math.random() * 3) + 1,
-          tags: ['new-upload'],
-        };
-        addCase(newCaseEntry);
-        targetCaseId = caseId;
-    } else {
-        // Add to existing case
+      if (uploadMode === 'new') {
+        // Create new case first
+        const newCase = await caseService.createCase({
+          patient_name: patientName || `Patient (${files[0]?.name.split('.')[0]})` || 'Anonymous',
+          patient_id: patientId || `MRN-${Math.floor(10000 + Math.random() * 90000)}`,
+          priority: 2,
+        });
+        targetCaseId = newCase.id;
+      } else {
         if (!selectedCaseId) return;
-        addScan(selectedCaseId, newScan);
         targetCaseId = selectedCaseId;
-    }
+      }
 
-    // Redirect to the study viewer for the case
-    router.push(`/studies/${targetCaseId}`);
+      // Upload files to the case
+      let uploadResult;
+      if (modality === 'ct' || modality === 'mri' || modality === 'xray') {
+        uploadResult = await uploadService.uploadCT(targetCaseId, rawFiles, part);
+      } else {
+        uploadResult = await uploadService.uploadUltrasound(targetCaseId, rawFiles, part, false);
+      }
+
+      // Redirect to the study viewer
+      router.push(`/studies/${uploadResult.study_id}`);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      setIsAnalyzing(false);
+      alert('Upload failed. Please try again.');
+    }
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    // ... existing onDrop ...
+    setRawFiles(prev => [...prev, ...acceptedFiles]);
+    
     const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
       type: file.type,
-      type: file.type,
-      status: 'pending',
-      progress: 0,
+      status: 'complete',
+      progress: 100,
       preview: URL.createObjectURL(file),
     }));
     setFiles((prev) => [...prev, ...newFiles]);
-    
-    newFiles.forEach((file) => {
-      simulateUpload(file.id);
-    });
   }, []);
 
-    // ... existing simulateUpload ...
-  const simulateUpload = (fileId: string) => {
-    const updateProgress = (progress: number, status: UploadedFile['status']) => {
-      setFiles((prev) =>
-        prev.map((f) =>
-          f.id === fileId ? { ...f, progress, status } : f
-        )
-      );
-    };
 
-    updateProgress(0, 'uploading');
-    
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 20;
-      if (progress >= 100) {
-        clearInterval(interval);
-        updateProgress(100, 'processing');
-        setTimeout(() => updateProgress(100, 'complete'), 2000);
-      } else {
-        updateProgress(progress, 'uploading');
-      }
-    }, 300);
-  };
 
   const removeFile = (fileId: string) => {
     setFiles((prev) => prev.filter((f) => f.id !== fileId));

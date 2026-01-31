@@ -56,6 +56,7 @@ const windowPresets = [
 const PIXEL_SCALE = 0.5;
 
 export default function FullImageViewer({
+  imageUrl,
   totalSlices = 120,
   currentSlice: propSlice,
   onSliceChange,
@@ -100,6 +101,12 @@ export default function FullImageViewer({
   const isInitialMount = useRef(true);
   const lastPropSlice = useRef(propSlice);
   
+  // Track latest propSlice to use in notification effect without adding it to dependencies
+  const propSliceRef = useRef(propSlice);
+  useEffect(() => {
+    propSliceRef.current = propSlice;
+  }, [propSlice]);
+
   useEffect(() => {
     // Only sync from parent on explicit propSlice changes, not on every render
     if (propSlice !== undefined && propSlice !== lastPropSlice.current) {
@@ -118,11 +125,11 @@ export default function FullImageViewer({
       isInitialMount.current = false;
       return;
     }
-    // Only notify if this was an internal change (not from prop sync)
-    if (slice !== propSlice) {
+    // Only notify if slice has changed locally and differs from the prop
+    if (slice !== propSliceRef.current) {
       onSliceChangeRef.current?.(slice);
     }
-  }, [slice, propSlice]);
+  }, [slice]);
 
   // Generate slice-based anatomy (simulates real CT)
   const sliceData = useMemo(() => {
@@ -576,6 +583,15 @@ export default function FullImageViewer({
                   className="w-full h-full object-contain"
                   style={{
                     filter: `brightness(${currentWindow.brightness}) contrast(${currentWindow.contrast})`
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement?.setAttribute('data-error', 'true');
+                    // Force a visible error fallback
+                    const errDiv = document.createElement('div');
+                    errDiv.className = 'absolute inset-0 flex flex-col items-center justify-center text-red-500 p-4 text-center';
+                    errDiv.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><p class="mt-2 font-bold">Failed to load image</p><p class="text-xs text-slate-400 mt-1">Check console/debug info</p>';
+                    e.currentTarget.parentElement?.appendChild(errDiv);
                   }}
                 />
               ) : (

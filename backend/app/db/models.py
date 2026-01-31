@@ -16,7 +16,7 @@ from sqlalchemy import (
     Boolean, Column, DateTime, Enum, Float, ForeignKey,
     Integer, String, Text, func, Index
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
+from sqlalchemy.types import Uuid as UUID, JSON
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDMixin
@@ -73,6 +73,13 @@ class QualityLevel(str, enum.Enum):
     POOR = "poor"
 
 
+class StudyStatus(str, enum.Enum):
+    """Study processing and reporting status."""
+    PENDING = "pending"
+    ANALYSED = "analysed"
+    REPORTS_GENERATED = "reports_generated"
+
+
 # ============================================================================
 # User Model
 # ============================================================================
@@ -122,10 +129,14 @@ class Case(Base, UUIDMixin, TimestampMixin):
         String(64), nullable=False, index=True,
         comment="Anonymized patient identifier"
     )
+    patient_name: Mapped[Optional[str]] = mapped_column(
+        String(256), nullable=True,
+        comment="Patient full name"
+    )
     status: Mapped[CaseStatus] = mapped_column(
         Enum(CaseStatus), default=CaseStatus.PENDING, nullable=False
     )
-    tags: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String), default=list)
+    tags: Mapped[Optional[List[str]]] = mapped_column(JSON, default=list)
     notes: Mapped[Optional[str]] = mapped_column(Text)
     priority: Mapped[int] = mapped_column(Integer, default=0)
     
@@ -143,7 +154,6 @@ class Case(Base, UUIDMixin, TimestampMixin):
     # Indexes
     __table_args__ = (
         Index("ix_case_patient_status", "patient_id", "status"),
-        Index("ix_case_created_at", "created_at"),
     )
 
 
@@ -162,6 +172,9 @@ class Study(Base, UUIDMixin, TimestampMixin):
         UUID(as_uuid=True), ForeignKey("case.id", ondelete="CASCADE"), nullable=False
     )
     modality: Mapped[Modality] = mapped_column(Enum(Modality), nullable=False)
+    status: Mapped[StudyStatus] = mapped_column(
+        Enum(StudyStatus), default=StudyStatus.PENDING, nullable=False
+    )
     body_part: Mapped[Optional[str]] = mapped_column(String(64))
     study_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
     study_description: Mapped[Optional[str]] = mapped_column(String(256))
@@ -176,7 +189,7 @@ class Study(Base, UUIDMixin, TimestampMixin):
     model_name: Mapped[Optional[str]] = mapped_column(String(128))
     
     # Additional metadata as JSON
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    meta_data: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     
     # Relationships
     case: Mapped["Case"] = relationship("Case", back_populates="studies")
@@ -215,7 +228,7 @@ class Series(Base, UUIDMixin, TimestampMixin):
     # Series properties
     num_images: Mapped[int] = mapped_column(Integer, default=0)
     slice_thickness: Mapped[Optional[float]] = mapped_column(Float)
-    pixel_spacing: Mapped[Optional[List[float]]] = mapped_column(ARRAY(Float))
+    pixel_spacing: Mapped[Optional[List[float]]] = mapped_column(JSON)
     
     # Relationships
     study: Mapped["Study"] = relationship("Study", back_populates="series_list")
@@ -247,8 +260,8 @@ class Image(Base, UUIDMixin, TimestampMixin):
     bits_allocated: Mapped[Optional[int]] = mapped_column(Integer)
     
     # Position and orientation
-    image_position: Mapped[Optional[List[float]]] = mapped_column(ARRAY(Float))
-    image_orientation: Mapped[Optional[List[float]]] = mapped_column(ARRAY(Float))
+    image_position: Mapped[Optional[List[float]]] = mapped_column(JSON)
+    image_orientation: Mapped[Optional[List[float]]] = mapped_column(JSON)
     slice_location: Mapped[Optional[float]] = mapped_column(Float)
     
     # Windowing defaults
@@ -261,7 +274,7 @@ class Image(Base, UUIDMixin, TimestampMixin):
     contrast_score: Mapped[Optional[float]] = mapped_column(Float)
     
     # Additional metadata
-    metadata: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    meta_data: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     
     # For ultrasound videos - is this a keyframe?
     is_keyframe: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -300,7 +313,7 @@ class Annotation(Base, UUIDMixin, TimestampMixin):
     # Label/value (format depends on type)
     # Classification: {"class": "abnormal", "confidence": 0.95}
     # Measurement: {"diameter_mm": 15.2, "area_mm2": 182.3}
-    label_value: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    label_value: Mapped[dict] = mapped_column(JSON, nullable=False)
     
     # For segmentation: path to mask file
     mask_path: Mapped[Optional[str]] = mapped_column(String(512))
@@ -349,7 +362,7 @@ class Report(Base, UUIDMixin, TimestampMixin):
     recommendations: Mapped[Optional[str]] = mapped_column(Text)
     
     # Structured data
-    measurements: Mapped[Optional[dict]] = mapped_column(JSONB, default=dict)
+    measurements: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     
     # Generation metadata
     generated_by: Mapped[str] = mapped_column(
@@ -398,7 +411,7 @@ class AudioRecording(Base, UUIDMixin, TimestampMixin):
     
     # Transcription
     transcript: Mapped[Optional[str]] = mapped_column(Text)
-    word_timestamps: Mapped[Optional[List[dict]]] = mapped_column(JSONB)
+    word_timestamps: Mapped[Optional[List[dict]]] = mapped_column(JSON)
     language: Mapped[str] = mapped_column(String(8), default="en")
     
     # Quality metrics
@@ -407,7 +420,7 @@ class AudioRecording(Base, UUIDMixin, TimestampMixin):
     has_background_noise: Mapped[bool] = mapped_column(Boolean, default=False)
     
     # Speaker diarization (if multiple speakers)
-    speaker_segments: Mapped[Optional[List[dict]]] = mapped_column(JSONB)
+    speaker_segments: Mapped[Optional[List[dict]]] = mapped_column(JSON)
     
     # Processing status
     is_processed: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -451,8 +464,8 @@ class InferenceJob(Base, UUIDMixin, TimestampMixin):
     processing_time_ms: Mapped[Optional[int]] = mapped_column(Integer)
     
     # Results
-    predictions: Mapped[Optional[dict]] = mapped_column(JSONB)
-    confidence_scores: Mapped[Optional[dict]] = mapped_column(JSONB)
+    predictions: Mapped[Optional[dict]] = mapped_column(JSON)
+    confidence_scores: Mapped[Optional[dict]] = mapped_column(JSON)
     
     # Error handling
     error_message: Mapped[Optional[str]] = mapped_column(Text)
@@ -494,7 +507,7 @@ class AuditLog(Base, UUIDMixin):
     resource_id: Mapped[Optional[str]] = mapped_column(String(128))
     
     # Details
-    details: Mapped[Optional[dict]] = mapped_column(JSONB)
+    details: Mapped[Optional[dict]] = mapped_column(JSON)
     ip_address: Mapped[Optional[str]] = mapped_column(String(45))
     user_agent: Mapped[Optional[str]] = mapped_column(String(512))
     

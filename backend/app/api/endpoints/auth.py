@@ -288,6 +288,10 @@ async def logout(
     return MessageResponse(message="Successfully logged out")
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(..., min_length=8, max_length=128)
+
 @router.put(
     "/me/password",
     response_model=MessageResponse,
@@ -295,8 +299,7 @@ async def logout(
     description="Change the current user's password."
 )
 async def change_password(
-    current_password: str,
-    new_password: str = Field(..., min_length=8, max_length=128),
+    request: ChangePasswordRequest,
     current_user: TokenPayload = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> MessageResponse:
@@ -316,13 +319,13 @@ async def change_password(
             detail="User not found"
         )
     
-    if not verify_password(current_password, user.password_hash):
+    if not verify_password(request.current_password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Current password is incorrect"
         )
     
-    user.password_hash = hash_password(new_password)
+    user.password_hash = hash_password(request.new_password)
     await db.commit()
     
     return MessageResponse(message="Password updated successfully")

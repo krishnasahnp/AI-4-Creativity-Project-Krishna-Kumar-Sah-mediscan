@@ -1,34 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import {
   Search,
-  Filter,
   FileImage,
-  Brain,
   Calendar,
   User,
-  MoreVertical,
   Download,
-  Share2,
   Trash2,
   Eye,
-  ChevronDown,
   Activity,
   Archive,
   Clock,
   CheckCircle2,
   AlertTriangle,
   Scan,
-  Radio
 } from 'lucide-react';
 import clsx from 'clsx';
+import { studyService, Study } from '@/services/studyService';
 
 // Utility for safe color mapping
+// ... (keep colorStyles as is or move to utility)
 const colorStyles = {
   blue: {
     bg: 'bg-blue-500/10',
@@ -88,104 +84,47 @@ const colorStyles = {
   }
 };
 
-// Mock Data
-const ALL_STUDIES = [
-  {
-    id: 'STD-2847',
-    patientName: 'Michael Davis',
-    patientId: 'MRN-45821',
-    modality: 'CT',
-    description: 'CT Chest with Contrast',
-    seriesCount: 4,
-    instanceCount: 480,
-    date: '2024-01-29',
-    time: '10:30',
-    status: 'complete',
-    aiStatus: 'critical',
-    finding: 'Pulmonary Nodule'
-  },
-  {
-    id: 'STD-2846',
-    patientName: 'Sarah Johnson',
-    patientId: 'MRN-45820',
-    modality: 'US',
-    description: 'Abdominal Ultrasound',
-    seriesCount: 1,
-    instanceCount: 24,
-    date: '2024-01-29',
-    time: '09:45',
-    status: 'processing',
-    aiStatus: 'processing',
-    finding: 'Analyzing...'
-  },
-  {
-    id: 'STD-2845',
-    patientName: 'Robert Wilson',
-    patientId: 'MRN-45819',
-    modality: 'MRI',
-    description: 'Brain MRI - Stroke Protocol',
-    seriesCount: 8,
-    instanceCount: 1200,
-    date: '2024-01-28',
-    time: '16:20',
-    status: 'complete',
-    aiStatus: 'normal',
-    finding: 'No acute findings'
-  },
-  {
-    id: 'STD-2844',
-    patientName: 'Emma Thompson',
-    patientId: 'MRN-45818',
-    modality: 'XR',
-    description: 'Chest X-Ray PA/Lateral',
-    seriesCount: 1,
-    instanceCount: 2,
-    date: '2024-01-28',
-    time: '14:15',
-    status: 'complete',
-    aiStatus: 'warning',
-    finding: 'Pneumonia suspected'
-  },
-  {
-    id: 'STD-2843',
-    patientName: 'James Anderson',
-    patientId: 'MRN-45817',
-    modality: 'CT',
-    description: 'CT Abdomen/Pelvis',
-    seriesCount: 3,
-    instanceCount: 320,
-    date: '2024-01-28',
-    time: '11:00',
-    status: 'archived',
-    aiStatus: 'normal',
-    finding: 'Normal'
-  }
-];
-
 export default function StudiesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('all');
-  const [selectedStudy, setSelectedStudy] = useState<string | null>(null);
+  const [studies, setStudies] = useState<Study[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+
+  const fetchStudies = async () => {
+    try {
+      setLoading(true);
+      const data = await studyService.getStudies({
+        search: searchQuery,
+        modality: activeFilter !== 'all' && activeFilter !== 'critical' && activeFilter !== 'processing' ? activeFilter.toUpperCase() : '',
+      });
+      setStudies(data.items);
+      setTotal(data.total);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudies();
+  }, [searchQuery, activeFilter]);
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this study? This cannot be undone.')) {
+        await studyService.deleteStudy(id);
+        fetchStudies();
+    }
+  };
 
   const stats = [
-    { label: 'Total Studies', value: '1,248', icon: FileImage, color: 'blue' },
-    { label: 'Processing', value: '12', icon: Activity, color: 'teal' },
-    { label: 'Critical', value: '5', icon: AlertTriangle, color: 'red' },
-    { label: 'Archived', value: '840', icon: Archive, color: 'gray' },
+    { label: 'Total Studies', value: total.toString(), icon: FileImage, color: 'blue' },
+    { label: 'Processing', value: '0', icon: Activity, color: 'teal' }, // Placeholder
+    { label: 'Critical', value: '0', icon: AlertTriangle, color: 'red' }, // Placeholder
+    { label: 'Archived', value: '0', icon: Archive, color: 'gray' }, // Placeholder
   ];
-
-  const filteredStudies = ALL_STUDIES.filter(study => {
-    const matchesSearch = 
-      study.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      study.patientId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      study.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (activeFilter === 'all') return matchesSearch;
-    if (activeFilter === 'critical') return matchesSearch && study.aiStatus === 'critical';
-    if (activeFilter === 'processing') return matchesSearch && study.status === 'processing';
-    return matchesSearch;
-  });
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-primary)] flex">
@@ -259,19 +198,19 @@ export default function StudiesPage() {
                   label="All Studies" 
                   onClick={() => setActiveFilter('all')} 
                 />
-                <FilterButton 
-                  active={activeFilter === 'critical'} 
-                  label="Critical Findings" 
-                  count={5}
-                  onClick={() => setActiveFilter('critical')} 
-                  color="red"
+                
+                 {/* Modality Filters - Simulating them as dynamic filters */}
+                 <FilterButton 
+                  active={activeFilter === 'ct'} 
+                  label="CT Scans" 
+                  onClick={() => setActiveFilter('ct')} 
+                  color="blue"
                 />
                 <FilterButton 
-                  active={activeFilter === 'processing'} 
-                  label="Processing" 
-                  count={12}
-                  onClick={() => setActiveFilter('processing')} 
-                  color="blue"
+                  active={activeFilter === 'mri'} 
+                  label="MRI" 
+                  onClick={() => setActiveFilter('mri')} 
+                  color="purple"
                 />
               </div>
             </div>
@@ -291,68 +230,78 @@ export default function StudiesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)]">
-                    {filteredStudies.map((study) => (
-                      <tr key={study.id} className="group hover:bg-[var(--color-bg-tertiary)]/50 transition-colors">
-                        <td className="p-4">
-                          <Link href={`/studies/${study.id}`} className="block">
-                            <p className="font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-primary-light)] transition-colors">
-                              {study.description}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-1">
-                              <span className="bg-[var(--color-bg-tertiary)] px-1.5 py-0.5 rounded">
-                                {study.seriesCount} Series
-                              </span>
-                              <span>•</span>
-                              <span>{study.instanceCount} Images</span>
-                            </div>
-                          </Link>
-                        </td>
-                        <td className="p-4">
-                          <p className="font-medium text-[var(--color-text-primary)]">{study.patientName}</p>
-                          <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] mt-1">
-                            <User className="w-3 h-3" />
-                            {study.patientId}
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="text-sm text-[var(--color-text-secondary)]">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5" />
-                              {study.date}
-                            </div>
-                            <div className="flex items-center gap-1.5 mt-1 text-[var(--color-text-muted)]">
-                              <Clock className="w-3.5 h-3.5" />
-                              {study.time}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <Badge 
-                            type="modality" 
-                            label={study.modality} 
-                            color={getModalityColor(study.modality)} 
-                          />
-                        </td>
-                        <td className="p-4">
-                          <StatusBadge status={study.aiStatus} label={study.finding} />
-                        </td>
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Link href={`/studies/${study.id}`}>
-                              <button className="btn btn-ghost p-2 hover:bg-[var(--color-primary-glow)] text-[var(--color-primary-light)]" title="View Study">
-                                <Eye className="w-4 h-4" />
-                              </button>
+                    {loading ? (
+                         <tr><td colSpan={6} className="p-8 text-center text-[var(--color-text-muted)]">Loading studies...</td></tr>
+                    ) : studies.length === 0 ? (
+                        <tr><td colSpan={6} className="p-8 text-center text-[var(--color-text-muted)]">No studies found.</td></tr>
+                    ) : (
+                        studies.map((study) => (
+                        <tr key={study.id} className="group hover:bg-[var(--color-bg-tertiary)]/50 transition-colors">
+                            <td className="p-4">
+                            <Link href={`/studies/${study.id}`} className="block">
+                                <p className="font-semibold text-[var(--color-text-primary)] hover:text-[var(--color-primary-light)] transition-colors">
+                                {study.description}
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mt-1">
+                                <span className="bg-[var(--color-bg-tertiary)] px-1.5 py-0.5 rounded">
+                                    {study.series_count} Series
+                                </span>
+                                <span>•</span>
+                                <span>{study.image_count} Images</span>
+                                </div>
                             </Link>
-                            <button className="btn btn-ghost p-2 hover:text-blue-400" title="Download">
-                              <Download className="w-4 h-4" />
-                            </button>
-                            <button className="btn btn-ghost p-2 hover:text-red-400" title="Delete">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                            </td>
+                            <td className="p-4">
+                            <p className="font-medium text-[var(--color-text-primary)]">{study.patient.patient_name || 'Unknown'}</p>
+                            <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] mt-1">
+                                <User className="w-3 h-3" />
+                                {study.patient.patient_id}
+                            </div>
+                            </td>
+                            <td className="p-4">
+                            <div className="text-sm text-[var(--color-text-secondary)]">
+                                <div className="flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                {new Date(study.study_date).toLocaleDateString()}
+                                </div>
+                                <div className="flex items-center gap-1.5 mt-1 text-[var(--color-text-muted)]">
+                                <Clock className="w-3.5 h-3.5" />
+                                {new Date(study.study_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                </div>
+                            </div>
+                            </td>
+                            <td className="p-4">
+                            <Badge 
+                                type="modality" 
+                                label={study.modality} 
+                                color={getModalityColor(study.modality)} 
+                            />
+                            </td>
+                            <td className="p-4">
+                            <StatusBadge status={"normal"} label={"Analyzed"} />
+                            </td>
+                            <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Link href={`/studies/${study.id}`}>
+                                <button className="btn btn-ghost p-2 hover:bg-[var(--color-primary-glow)] text-[var(--color-primary-light)]" title="View Study">
+                                    <Eye className="w-4 h-4" />
+                                </button>
+                                </Link>
+                                <button className="btn btn-ghost p-2 hover:text-blue-400" title="Download">
+                                <Download className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    className="btn btn-ghost p-2 hover:text-red-400" 
+                                    title="Delete"
+                                    onClick={() => handleDelete(study.id)}
+                                >
+                                <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                            </td>
+                        </tr>
+                        ))
+                    )}
                   </tbody>
                 </table>
               </div>
